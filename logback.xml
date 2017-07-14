@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<Pattern>%d{YYYY/MM/dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} -
+				%msg%n
+			</Pattern>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+	</appender>
+
+	<appender name="dailyRollingFileAppender"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>logs/daily/masterserver.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>masterserver.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<maxHistory>30</maxHistory> <!-- in days -->
+		</rollingPolicy>
+
+		<encoder>
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg %n
+			</Pattern>
+		</encoder>
+	</appender>
+	<appender name="minuteRollingFileAppender"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>logs/last-30min/masterserver-minute.%d{yyyy-MM-dd_HH-mm}.log
+			</FileNamePattern>
+			<maxHistory>30</maxHistory> <!-- in minutes -->
+		</rollingPolicy>
+
+		<encoder>
+			<Pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n
+			</Pattern>
+		</encoder>
+	</appender>
+
+	<logger name="com.aceattorneyonline" level="debug" additivity="false">
+		<appender-ref ref="dailyRollingFileAppender" />
+		<appender-ref ref="minuteRollingFileAppender" />
+		<appender-ref ref="consoleAppender" />
+	</logger>
+
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="consoleAppender" />
+	</root>
+</configuration>
