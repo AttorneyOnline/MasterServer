@@ -25,5 +25,10 @@ Netty.io-based master server for the Attorney Online family</description>
   		<artifactId>netty-all</artifactId>
   		<version>4.1.13.Final</version>
   	</dependency>
+  	<dependency>
+  		<groupId>io.vertx</groupId>
+  		<artifactId>vertx-core</artifactId>
+  		<version>3.4.2</version>
+  	</dependency>
   </dependencies>
 </project>
