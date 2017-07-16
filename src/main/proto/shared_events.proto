@@ -15,15 +15,3 @@ message GetVersion {
 message GetMotd {
 	Uuid id = 1;
 }
-
-// Flood controlled
-// For legacy AO
-message GetMotdPaged {
-	Uuid id = 1;
-}
-
-// Flood controlled if no next page
-// For legacy AO
-message GetMotdNextPage {
-	Uuid id = 1;
-}

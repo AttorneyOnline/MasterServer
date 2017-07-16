@@ -10,6 +10,7 @@ import "uuid.proto";
 // No name commitment required at this time
 message NewPlayer {
 	Uuid id = 1;
+	optional string hdid = 2;
 }
 
 // No blanks allowed
@@ -25,4 +26,11 @@ message SendChat {
 // Flood controlled
 message GetServerList {
 	Uuid id = 1;
+}
+
+// Flood controlled
+// For legacy AO
+message GetServerListPaged {
+	Uuid id = 1;
+	uint32 page = 2;
 }

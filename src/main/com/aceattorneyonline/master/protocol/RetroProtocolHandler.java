@@ -8,7 +8,6 @@ import com.aceattorneyonline.master.ContextualProtocolHandler;
 import com.aceattorneyonline.master.ProtocolHandler;
 
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.net.NetSocket;
 
 public class RetroProtocolHandler extends ContextualProtocolHandler {
 	
@@ -33,6 +32,7 @@ public class RetroProtocolHandler extends ContextualProtocolHandler {
 
 	@Override
 	public ProtocolHandler registerClient(Client client) {
+		client.setProtocolWriter(new RetroProtocolWriter(client.context()));
 		return new RetroProtocolHandler(client);
 	}
 

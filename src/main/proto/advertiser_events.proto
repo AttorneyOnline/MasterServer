@@ -24,6 +24,7 @@ message Heartbeat {
 }
 
 // Flood controlled
+// Can error if not an advertiser
 message Ping {
 	Uuid id = 1;
 }

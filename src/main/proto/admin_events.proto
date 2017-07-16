@@ -22,6 +22,12 @@ message BanPlayer {
 	string target = 2;
 }
 
+// Returns error if not in ban list
+message UnbanPlayer {
+	Uuid id = 1;
+	string target = 2;
+}
+
 // Blocking operation
 message ReloadBans {
 	Uuid id = 1;

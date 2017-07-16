@@ -16,6 +16,8 @@ public class MasterServer {
 	private static final Logger logger = LoggerFactory.getLogger(MasterServer.class);
 
 	private DefaultProtocolHandler defaultHandler;
+	
+	public static final Vertx vertx = Vertx.vertx();
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		new MasterServer().run();
@@ -34,7 +36,6 @@ public class MasterServer {
 
 	private void createVertxServer() {
 		logger.info("Creating Vert.x server");
-		Vertx vertx = Vertx.vertx();
 
 		// @formatter:off
 		NetServerOptions options = new NetServerOptions()

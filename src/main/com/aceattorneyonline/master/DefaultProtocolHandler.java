@@ -6,8 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.protocol.RetroProtocolHandler;
-
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetSocket;
@@ -39,7 +37,7 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 				Client client = new UnconnectedClient(socket);
 				socket.handler(compatibleHandler.registerClient(client));
 			} else {
-				socket.end(Buffer.buffer("invalid protocol"));
+				socket.end(Buffer.buffer("Invalid protocol"));
 			}
 		});
 	}
