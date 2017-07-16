@@ -1,16 +1,31 @@
 package com.aceattorneyonline.master;
 
-import io.netty.channel.Channel;
-
 /**
  * Represents a player (non-server) that is currently connected to the master
  * server.
  */
-public class Player extends User {
-	/** Name used in chat. May be null. */
+public class Player extends Client {
 	private String name;
 
-	public Player(Channel channel) {
-		super(channel);
+	/** Instantiates a connected player based from an unconnected client. */
+	public Player(UnconnectedClient client) {
+		super(client);
 	}
+
+	/**
+	 * Returns the name used in chat. May be null, as players are only required to
+	 * enter their names before using the chat functionality.
+	 */
+	public String name() {
+		return name;
+	}
+
+	public String toString() {
+		String name = name();
+		if (name == null) {
+			name = "(unnamed)";
+		}
+		return String.format("%s - Player %12s", id(), name);
+	}
+
 }

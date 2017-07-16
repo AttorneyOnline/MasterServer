@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package com.aceattorneyonline.master.events;
+
+option java_outer_classname = "PlayerEventProtos";
+
+import "uuid.proto";
+
+// One-shot
+// No name commitment required at this time
+message NewPlayer {
+	Uuid id = 1;
+}
+
+// No blanks allowed
+// No differing usernames
+// Flood controlled
+// Spam controlled
+message SendChat {
+	Uuid id = 1;
+	string username = 2;
+	string message = 3;
+}
+
+// Flood controlled
+message GetServerList {
+	Uuid id = 1;
+}

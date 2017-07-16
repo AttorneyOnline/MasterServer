@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package com.aceattorneyonline.master.events;
+
+option java_outer_classname = "SharedEventProtos";
+
+import "uuid.proto";
+
+// Flood controlled
+message GetVersion {
+	Uuid id = 1;
+}
+
+// Flood controlled
+message GetMotd {
+	Uuid id = 1;
+}
+
+// Flood controlled
+// For legacy AO
+message GetMotdPaged {
+	Uuid id = 1;
+}
+
+// Flood controlled if no next page
+// For legacy AO
+message GetMotdNextPage {
+	Uuid id = 1;
+}

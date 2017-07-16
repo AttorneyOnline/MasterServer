@@ -24,11 +24,6 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>io.netty</groupId>
-  		<artifactId>netty-all</artifactId>
-  		<version>4.1.13.Final</version>
-  	</dependency>
-  	<dependency>
   		<groupId>io.vertx</groupId>
   		<artifactId>vertx-core</artifactId>
   		<version>3.4.2</version>
@@ -42,6 +37,16 @@
   		<groupId>org.slf4j</groupId>
   		<artifactId>slf4j-api</artifactId>
   		<version>1.7.25</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.google.protobuf</groupId>
+  		<artifactId>protobuf-java</artifactId>
+  		<version>3.3.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.xolstice.maven.plugins</groupId>
+  		<artifactId>protobuf-maven-plugin</artifactId>
+  		<version>0.5.0</version>
   	</dependency>
   </dependencies>
 </project>
