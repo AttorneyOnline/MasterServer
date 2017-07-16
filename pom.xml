@@ -10,7 +10,7 @@
   	<maven.compiler.target>1.8</maven.compiler.target>
   </properties>
   <build>
-    <sourceDirectory>src</sourceDirectory>
+    <sourceDirectory>src/main</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -19,6 +19,19 @@
           <source/>
           <target/>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+        <version>0.5.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>test-compile</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
