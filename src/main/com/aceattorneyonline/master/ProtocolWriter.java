@@ -36,4 +36,9 @@ public interface ProtocolWriter {
 	/** Sends a pong error to non-servers. */
 	public void sendPongError();
 
+	/** Sends a heartbeat success for new advertisers. */
+	public void sendNewHeartbeatSuccess();
+
+	/** Sends a periodic check to very that the connection is still open. */
+	public void sendConnectionCheck();
 }

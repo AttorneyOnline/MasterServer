@@ -8,11 +8,11 @@ import com.aceattorneyonline.master.ProtocolWriter;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 
-public class RetroProtocolWriter implements ProtocolWriter {
+public class AOProtocolWriter implements ProtocolWriter {
 
-	private WriteStream<Buffer> writer;
+	protected final WriteStream<Buffer> writer;
 
-	public RetroProtocolWriter(WriteStream<Buffer> writer) {
+	public AOProtocolWriter(WriteStream<Buffer> writer) {
 		this.writer = writer;
 	}
 
@@ -22,7 +22,7 @@ public class RetroProtocolWriter implements ProtocolWriter {
 		String port = Integer.toString(advertiser.address().port());
 		String name = advertiser.name();
 		String version = advertiser.version();
-		
+
 		StringBuilder packet = new StringBuilder();
 		packet.append("SN#")
 			.append(ip).append("#")
@@ -50,19 +50,20 @@ public class RetroProtocolWriter implements ProtocolWriter {
 		packet.append("%");
 		writer.write(Buffer.buffer(packet.toString()));
 	}
-	
+
 	@Override
 	public void sendSystemMessage(String message) {
 		writer.write(Buffer.buffer("CT#AOMS#" + message + "#%"));
-		// Looks buggy, but was found in ms.py:
-		//writer.write(Buffer.buffer("CT#" + message + "\b00##%"));
-		// Not supported in AO2 yet:
-		//writer.write(Buffer.buffer("MCT#" + message + "#%"));
 	}
 
 	@Override
 	public void sendChatMessage(String author, String message) {
-		writer.write(Buffer.buffer("CT#" + sanitize(author) + "#" + sanitize(message) + "#%"));
+		if (author == "") {
+			// This method was found in ms.py
+			writer.write(Buffer.buffer("CT#" + message + "\b00##%"));
+		} else {
+			writer.write(Buffer.buffer("CT#" + sanitize(author) + "#" + sanitize(message) + "#%"));
+		}
 	}
 
 	@Override
@@ -74,12 +75,22 @@ public class RetroProtocolWriter implements ProtocolWriter {
 	public void sendPong() {
 		writer.write(Buffer.buffer("PONG#%"));
 	}
-	
+
 	@Override
 	public void sendPongError() {
 		writer.write(Buffer.buffer("NOSERV#%"));
 	}
+
+	@Override
+	public void sendNewHeartbeatSuccess() {
+		writer.write(Buffer.buffer("PSDD#0#%"));
+	}
 	
+	@Override
+	public void sendConnectionCheck() {
+		writer.write(Buffer.buffer("CHECK#%"));
+	}
+
 	private String sanitize(String str) {
 		return str.replaceAll("%", "<percent>")
 				.replaceAll("#", "<num>")

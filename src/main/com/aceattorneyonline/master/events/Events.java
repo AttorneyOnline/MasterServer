@@ -5,8 +5,7 @@ public enum Events {
 	NEW_ADVERTISER("ms.advertiser.new"),
 
 	GET_SERVER_LIST("ms.serverlist.get"),
-	GET_SERVER_LIST_PAGED("ms.serverlist.paged"),
-	GET_SERVER_LIST_NEXTPAGE("ms.serverlist.paged.next"),
+	GET_SERVER_LIST_PAGED("ms.serverlist.get.paged"),
 
 	SEND_CHAT("ms.chat.send"), // gets passed to event handler first
 	BROADCAST_CHAT("ms.chat.broadcast"), // gets broadcast to all players
@@ -22,7 +21,7 @@ public enum Events {
 	BAN_PLAYER("ms.admin.ban"),
 	UNBAN_PLAYER("ms.admin.unban"),
 
-	BANS_RELOAD("ms.util.bans.reload");
+	RELOAD_BANS("ms.util.bans.reload");
 
 	private final String name;
 

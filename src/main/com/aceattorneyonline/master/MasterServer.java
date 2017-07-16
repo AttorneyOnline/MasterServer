@@ -5,7 +5,8 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.protocol.RetroProtocolHandler;
+import com.aceattorneyonline.master.protocol.AO1ProtocolHandler;
+import com.aceattorneyonline.master.protocol.AO2ProtocolHandler;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServerOptions;
@@ -31,7 +32,8 @@ public class MasterServer {
 
 	private void setupProtocolHandlers() {
 		defaultHandler = new DefaultProtocolHandler();
-		defaultHandler.register(new RetroProtocolHandler());
+		defaultHandler.register(new AO1ProtocolHandler());
+		defaultHandler.register(new AO2ProtocolHandler());
 	}
 
 	private void createVertxServer() {

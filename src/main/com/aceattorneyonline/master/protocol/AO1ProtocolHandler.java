@@ -9,15 +9,15 @@ import com.aceattorneyonline.master.ProtocolHandler;
 
 import io.vertx.core.buffer.Buffer;
 
-public class RetroProtocolHandler extends ContextualProtocolHandler {
+public class AO1ProtocolHandler extends ContextualProtocolHandler {
 	
-	private static final Logger logger = LoggerFactory.getLogger(RetroProtocolHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(AO1ProtocolHandler.class);
 
-	public RetroProtocolHandler() {
+	public AO1ProtocolHandler() {
 		super();
 	}
 
-	public RetroProtocolHandler(Client context) {
+	public AO1ProtocolHandler(Client context) {
 		super(context);
 	}
 
@@ -27,13 +27,14 @@ public class RetroProtocolHandler extends ContextualProtocolHandler {
 
 	@Override
 	public boolean isCompatible(Buffer event) {
+		// TODO: read buffer and check if it's 1.7.5/retro
 		return false;
 	}
 
 	@Override
 	public ProtocolHandler registerClient(Client client) {
-		client.setProtocolWriter(new RetroProtocolWriter(client.context()));
-		return new RetroProtocolHandler(client);
+		client.setProtocolWriter(new AOProtocolWriter(client.context()));
+		return new AO1ProtocolHandler(client);
 	}
 
 }
