@@ -1,6 +1,6 @@
 package com.aceattorneyonline.master;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Defines the protocol-specific methods on how commands will be sent back to a
@@ -13,10 +13,10 @@ import java.util.List;
 public interface ProtocolWriter {
 
 	/** Sends a single server entry being advertised. */
-	public void sendServerEntry(Advertiser advertiser);
+	public void sendServerEntry(AdvertisedServer advertiser);
 
 	/** Sends multiple server entries being advertised. */
-	public void sendServerEntries(List<Advertiser> advertisers);
+	public void sendServerEntries(Collection<AdvertisedServer> serverList);
 
 	/**
 	 * Sends a message as an official communication between the master server and

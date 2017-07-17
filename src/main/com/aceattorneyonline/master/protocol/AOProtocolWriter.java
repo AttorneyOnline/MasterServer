@@ -1,8 +1,8 @@
 package com.aceattorneyonline.master.protocol;
 
-import java.util.List;
+import java.util.Collection;
 
-import com.aceattorneyonline.master.Advertiser;
+import com.aceattorneyonline.master.AdvertisedServer;
 import com.aceattorneyonline.master.ProtocolWriter;
 
 import io.vertx.core.buffer.Buffer;
@@ -17,7 +17,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 	}
 
 	@Override
-	public void sendServerEntry(Advertiser advertiser) {
+	public void sendServerEntry(AdvertisedServer advertiser) {
 		String ip = advertiser.address().host();
 		String port = Integer.toString(advertiser.address().port());
 		String name = advertiser.name();
@@ -33,10 +33,10 @@ public class AOProtocolWriter implements ProtocolWriter {
 	}
 
 	@Override
-	public void sendServerEntries(List<Advertiser> advertisers) {
+	public void sendServerEntries(Collection<AdvertisedServer> advertisers) {
 		StringBuilder packet = new StringBuilder();
 		packet.append("ALL#");
-		for (Advertiser advertiser : advertisers) {
+		for (AdvertisedServer advertiser : advertisers) {
 			String ip = advertiser.address().host();
 			String port = Integer.toString(advertiser.address().port());
 			String name = sanitize(advertiser.name());

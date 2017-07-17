@@ -4,29 +4,28 @@ package com.aceattorneyonline.master;
  * Represents a server that is being advertised on the master server.
  */
 public class Advertiser extends Client {
-	private String name;
-	private String description;
-	private String version;
+	private AdvertisedServer server;
 
 	/** Promotes an unconnected client to an advertiser. */
 	public Advertiser(UnconnectedClient client) {
 		super(client);
 	}
 
-	/** Returns the name of the server. Must not be null. */
-	public String name() {
-		return name;
+	/** Returns the server being advertised. */
+	public AdvertisedServer server() {
+		return server;
+	}
+
+	public void setServer(AdvertisedServer server) {
+		this.server = server;
 	}
 
 	public String toString() {
-		return String.format("%s - Server (%8s) %30s", id(), version(), name());
+		if (server != null) {
+			return String.format("%s - Advertiser - %s", id(), server.toString());
+		} else {
+			return String.format("%s - Advertiser - (not advertising)", id(), server.toString());
+		}
 	}
 
-	public String description() {
-		return description;
-	}
-
-	public String version() {
-		return version;
-	}
 }
