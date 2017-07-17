@@ -3,6 +3,7 @@ package com.aceattorneyonline.master.verticles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.events.Events;
 
 import io.vertx.core.AbstractVerticle;
@@ -26,7 +27,7 @@ public class Version extends AbstractVerticle {
 	}
 
 	public void handleGetVersion(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.reply(MasterServer.VERSION);
 	}
 
 }

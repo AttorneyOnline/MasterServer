@@ -12,12 +12,24 @@ import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServerOptions;
 
 public class MasterServer {
-	private static final int HOST_PORT = 27016;
-
 	private static final Logger logger = LoggerFactory.getLogger(MasterServer.class);
 
+	private static final int HOST_PORT = 27016;
+
+	public static final String VERSION;
+	static {
+		Package pkg = MasterServer.class.getPackage();
+		if (pkg == null) {
+			logger.warn("No package/manifest found to get a server version from! \n"
+					+ "(usually this happens when the server is not being run from a jar file)");
+			VERSION = "(debug)";
+		} else {
+			VERSION = pkg.getImplementationVersion();
+		}
+	}
+
 	private DefaultProtocolHandler defaultHandler;
-	
+
 	public static final Vertx vertx = Vertx.vertx();
 
 	public static void main(String[] args) throws IOException, InterruptedException {
