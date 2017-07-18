@@ -52,4 +52,8 @@ public abstract class Client {
 		return context.remoteAddress();
 	}
 
+	public String toString() {
+		return String.format("%s - Client - %s", id(), address().toString());
+	}
+
 }
