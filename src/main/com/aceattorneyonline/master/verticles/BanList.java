@@ -41,6 +41,7 @@ public class BanList extends ClientListVerticle {
 		eventBus.consumer(Events.BAN_PLAYER.toString(), this::handleBanClient);
 		eventBus.consumer(Events.UNBAN_PLAYER.toString(), this::handleUnbanClient);
 		eventBus.consumer(Events.RELOAD_BANS.toString(), this::handleReloadBans);
+		// TODO: read ban list file
 	}
 
 	@Override
