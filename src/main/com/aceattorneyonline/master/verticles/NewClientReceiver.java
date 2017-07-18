@@ -34,11 +34,11 @@ public class NewClientReceiver extends ClientListVerticle {
 	}
 
 	public void handleNewPlayer(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.fail(0, "not implemented"); // TODO handleNewPlayer
 	}
 
 	public void handleNewAdvertiser(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.fail(0, "not implemented"); // TODO handleNewAdvertiser
 	}
 
 }

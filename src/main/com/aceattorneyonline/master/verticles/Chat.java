@@ -33,7 +33,7 @@ public class Chat extends ClientListVerticle {
 	}
 
 	public void handleSendChat(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.fail(0, "not implemented"); // TODO handleSendChat
 	}
 
 }

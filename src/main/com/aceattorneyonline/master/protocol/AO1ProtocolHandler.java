@@ -28,6 +28,7 @@ public class AO1ProtocolHandler extends ContextualProtocolHandler {
 	@Override
 	public boolean isCompatible(Buffer event) {
 		// TODO: read buffer and check if it's 1.7.5/retro
+		logger.error("Not implemented!");
 		return false;
 	}
 

@@ -35,11 +35,11 @@ public class Motd extends ClientListVerticle {
 	}
 
 	public void handleSetMotd(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.fail(0, "not implemented"); // TODO handleSetMotd
 	}
 
 	public void handleReloadMotd(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		event.fail(0, "not implemented"); // TODO handleReloadMotd
 	}
 
 }
