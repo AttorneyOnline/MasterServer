@@ -1,12 +1,21 @@
 package com.aceattorneyonline.master;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.protocol.AO1ProtocolHandler;
 import com.aceattorneyonline.master.protocol.AO2ProtocolHandler;
+import com.aceattorneyonline.master.verticles.BanList;
+import com.aceattorneyonline.master.verticles.Chat;
+import com.aceattorneyonline.master.verticles.Motd;
+import com.aceattorneyonline.master.verticles.NewClientReceiver;
+import com.aceattorneyonline.master.verticles.ServerList;
+import com.aceattorneyonline.master.verticles.Version;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServerOptions;
@@ -28,6 +37,8 @@ public class MasterServer {
 		}
 	}
 
+	private Map<UUID, Client> clientList = new HashMap<>();
+
 	private DefaultProtocolHandler defaultHandler;
 
 	public static final Vertx vertx = Vertx.vertx();
@@ -39,6 +50,7 @@ public class MasterServer {
 	public void run() {
 		logger.info("Server created");
 		setupProtocolHandlers();
+		setupVerticles();
 		createVertxServer();
 	}
 
@@ -46,6 +58,15 @@ public class MasterServer {
 		defaultHandler = new DefaultProtocolHandler();
 		defaultHandler.register(new AO1ProtocolHandler());
 		defaultHandler.register(new AO2ProtocolHandler());
+	}
+
+	private void setupVerticles() {
+		vertx.deployVerticle(new NewClientReceiver(clientList));
+		vertx.deployVerticle(new ServerList(clientList));
+		vertx.deployVerticle(new BanList(clientList));
+		vertx.deployVerticle(new Chat(clientList));
+		vertx.deployVerticle(new Motd(clientList));
+		vertx.deployVerticle(new Version(clientList));
 	}
 
 	private void createVertxServer() {
