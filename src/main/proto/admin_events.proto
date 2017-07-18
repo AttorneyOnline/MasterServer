@@ -20,6 +20,7 @@ message ReloadMotd {
 message BanPlayer {
 	Uuid id = 1;
 	string target = 2;
+	string reason = 3;
 }
 
 // Returns error if not in ban list
