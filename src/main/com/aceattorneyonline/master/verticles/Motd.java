@@ -1,17 +1,24 @@
 package com.aceattorneyonline.master.verticles;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.events.Events;
 
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class Motd extends AbstractVerticle {
+public class Motd extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Motd.class);
+
+	public Motd(Map<UUID, Client> clientList) {
+		super(clientList);
+	}
 
 	@Override
 	public void start() {

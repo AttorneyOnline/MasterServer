@@ -1,17 +1,45 @@
 package com.aceattorneyonline.master.verticles;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.AdvertisedServer;
+import com.aceattorneyonline.master.Advertiser;
+import com.aceattorneyonline.master.Client;
+import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
+import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
 import com.aceattorneyonline.master.events.Events;
+import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
+import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
+import com.google.protobuf.InvalidProtocolBufferException;
 
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.net.SocketAddress;
 
-public class ServerList extends AbstractVerticle {
+public class ServerList extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServerList.class);
+
+	private Map<UUID, Advertiser> advertiserList = new HashMap<>();
+
+	private Comparator<AdvertisedServer> listComparator = (a, b) -> a.uptime().compareTo(b.uptime());
+	private Map<SocketAddress, AdvertisedServer> serverList = new HashMap<>();
+
+	private List<AdvertisedServer> serverListCache = new ArrayList<>();
+	private boolean serverListCacheDirty = false;
+
+	public ServerList(Map<UUID, Client> clientList) {
+		super(clientList);
+	}
 
 	@Override
 	public void start() {
@@ -29,19 +57,89 @@ public class ServerList extends AbstractVerticle {
 	}
 
 	public void handleGetServerList(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		try {
+			GetServerList gsl = GetServerList.parseFrom(event.body().getBytes());
+			UUID id = UUID.fromString(gsl.getId().getId());
+			Client client = getClientById(id);
+			client.protocolWriter().sendServerEntries(serverListCache);
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse GetServerList protobuf");
+		}
 	}
 
 	public void handleGetServerListPaged(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		try {
+			GetServerListPaged gslp = GetServerListPaged.parseFrom(event.body().getBytes());
+			UUID id = UUID.fromString(gslp.getId().getId());
+			int pageNo = gslp.getPage();
+			AdvertisedServer server = getSortedServerList().get(pageNo);
+			getClientById(id).protocolWriter().sendServerEntry(server);
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse GetServerListPaged protobuf");
+		} catch (IndexOutOfBoundsException e) {
+			event.fail(1, "Could not get a list at that page");
+		}
 	}
-	
+
 	public void handleHeartbeat(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		try {
+			Heartbeat hb = Heartbeat.parseFrom(event.body().getBytes());
+			UUID id = UUID.fromString(hb.getId().getId());
+			Advertiser advertiser = advertiserList.get(id);
+			AdvertisedServer server =
+					new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(), hb.getVersion());
+			advertiser.setServer(server);
+			addServer(server);
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse Heartbeat protobuf");
+		}
 	}
-	
+
 	public void handlePing(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO
+		try {
+			Ping ping = Ping.parseFrom(event.body().getBytes());
+			UUID id = UUID.fromString(ping.getId().getId());
+			Advertiser advertiser = advertiserList.get(id);
+			if (advertiser != null && advertiser.server() != null) {
+				advertiser.protocolWriter().sendPong();
+			} else {
+				advertiser.protocolWriter().sendPongError();
+			}
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse Ping protobuf");
+		}
+	}
+
+	/** Caches a sorted version of the server list. */
+	private void cacheServerList() {
+		synchronized (serverListCache) {
+			serverListCache = serverList.values().stream().sorted(listComparator).collect(Collectors.toList());
+		}
+		serverListCacheDirty = false;
+	}
+
+	/** Adds or updates an advertised server. */
+	public void addServer(AdvertisedServer server) {
+		synchronized (serverList) {
+			serverList.put(server.address(), server);
+		}
+		serverListCacheDirty = true;
+	}
+
+	/** Removes an advertised server from the server list. */
+	public void removeServer(AdvertisedServer server) {
+		synchronized (serverList) {
+			serverList.remove(server.address());
+		}
+		serverListCacheDirty = true;
+	}
+
+	/** Gets a sorted version of the server list from cache. */
+	public List<AdvertisedServer> getSortedServerList() {
+		if (serverListCacheDirty) {
+			cacheServerList();
+		}
+		return serverListCache;
 	}
 
 }
