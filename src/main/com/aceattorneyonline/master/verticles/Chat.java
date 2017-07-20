@@ -1,5 +1,6 @@
 package com.aceattorneyonline.master.verticles;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,26 +41,23 @@ public class Chat extends ClientListVerticle {
 			SendChat chat = SendChat.parseFrom(event.body().getBytes());
 			UUID id = UUID.fromString(chat.getId().getId());
 			Player sender = getPlayerById(id);
-			String message = chat.getMessage();
+			String message = chat.getMessage().trim();
 
 			if (sender == null) {
 				event.fail(1, "Requester is not a player.");
+			} else if (message.isEmpty()) {
+				logger.warn("({}) tried to send an empty message!", sender);
+			} else if (message.charAt(0) == '!') {
+				List<String> tokens = ChatCommandParser.parseChatCommand(message);
+				logger.info("{} ran a command: {}", id.toString(), message);
+			} else {
+				getVertx().eventBus().publish(Events.BROADCAST_CHAT.toString(), message);
+				logger.info("{}: {}", id.toString(), message);
 			}
-
-			if (message.charAt(0) == '!') {
-				String[] args = parseChatCommand(message);
-			}
-
-			getVertx().eventBus().publish(Events.BROADCAST_CHAT.toString(), message);
-
-			logger.info("{}: {}", id.toString(), message);
+			// TODO: anti-flood
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(1, "Could not parse SendChat protobuf");
 		}
-	}
-
-	private String[] parseChatCommand(String message) {
-		return new String[0];
 	}
 
 }

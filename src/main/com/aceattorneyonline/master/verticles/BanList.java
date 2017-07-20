@@ -3,6 +3,7 @@ package com.aceattorneyonline.master.verticles;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -11,11 +12,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.ChatCommandSyntax;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.AdminEventProtos.BanPlayer;
 import com.aceattorneyonline.master.events.AdminEventProtos.UnbanPlayer;
 import com.aceattorneyonline.master.events.Events;
+import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import inet.ipaddr.IPAddress;
@@ -117,6 +120,22 @@ public class BanList extends ClientListVerticle {
 		}
 	}
 
+	@ChatCommandSyntax(name = "ban", description = "Bans a player.", arguments = "<player/ip> <reason>")
+	public static Object parseBanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+		String help = "!ban <player/ip> <reason>";
+		try {
+			if (args.size() == 2) {
+				return BanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).setReason(args.get(1)).build();
+			} else if (args.size() == 1) {
+				return BanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
+			} else {
+				throw new IllegalArgumentException(help);
+			}
+		} catch (IndexOutOfBoundsException e) {
+			throw new IllegalArgumentException(help, e);
+		}
+	}
+
 	public void handleUnbanClient(Message<String> event) {
 		try {
 			UnbanPlayer ban = UnbanPlayer.parseFrom(event.body().getBytes());
@@ -124,7 +143,7 @@ public class BanList extends ClientListVerticle {
 			Player requestingPlayer = getPlayerById(id);
 			String targetText = ban.getTarget();
 
-			logger.debug("User {} is requesting to unban {}", id.toString(), targetText);
+			logger.debug("User {} is requesting to unban {}", requestingPlayer, targetText);
 
 			if (requestingPlayer == null) {
 				event.fail(2, "Requester is not a player.");
@@ -149,8 +168,25 @@ public class BanList extends ClientListVerticle {
 		}
 	}
 
+	public static Object parseUnbanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+		String help = "!unban <ip>";
+		try {
+			if (args.size() == 1) {
+				return UnbanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
+			} else {
+				throw new IllegalArgumentException(help);
+			}
+		} catch (IndexOutOfBoundsException e) {
+			throw new IllegalArgumentException(help, e);
+		}
+	}
+
 	public void handleReloadBans(Message<String> event) {
 		event.fail(0, "not implemented"); // TODO handleReloadBans
+	}
+
+	public static Object parseReloadBans(Uuid invoker, List<String> args) throws IllegalArgumentException {
+		return UnbanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
 	}
 
 	public void banPlayer(Ban playerBan) {
