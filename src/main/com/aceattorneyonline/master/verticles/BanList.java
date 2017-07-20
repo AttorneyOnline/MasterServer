@@ -16,6 +16,7 @@ import com.aceattorneyonline.master.ChatCommandSyntax;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.AdminEventProtos.BanPlayer;
+import com.aceattorneyonline.master.events.AdminEventProtos.ReloadBans;
 import com.aceattorneyonline.master.events.AdminEventProtos.UnbanPlayer;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
@@ -121,18 +122,18 @@ public class BanList extends ClientListVerticle {
 	}
 
 	@ChatCommandSyntax(name = "ban", description = "Bans a player.", arguments = "<player/ip> <reason>")
-	public static Object parseBanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
-		String help = "!ban <player/ip> <reason>";
+	public static com.google.protobuf.Message parseBanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
 		try {
-			if (args.size() == 2) {
-				return BanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).setReason(args.get(1)).build();
+			if (args.size() >= 2) {
+				String reason = String.join(" ", args.subList(1, args.size()));
+				return BanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).setReason(reason).build();
 			} else if (args.size() == 1) {
 				return BanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
 			} else {
-				throw new IllegalArgumentException(help);
+				throw new IllegalArgumentException();
 			}
 		} catch (IndexOutOfBoundsException e) {
-			throw new IllegalArgumentException(help, e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -168,16 +169,16 @@ public class BanList extends ClientListVerticle {
 		}
 	}
 
-	public static Object parseUnbanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
-		String help = "!unban <ip>";
+	@ChatCommandSyntax(name = "unban", description = "Unbans a player.", arguments = "<ip>")
+	public static com.google.protobuf.Message parseUnbanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
 		try {
 			if (args.size() == 1) {
 				return UnbanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
 			} else {
-				throw new IllegalArgumentException(help);
+				throw new IllegalArgumentException();
 			}
 		} catch (IndexOutOfBoundsException e) {
-			throw new IllegalArgumentException(help, e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -185,8 +186,9 @@ public class BanList extends ClientListVerticle {
 		event.fail(0, "not implemented"); // TODO handleReloadBans
 	}
 
-	public static Object parseReloadBans(Uuid invoker, List<String> args) throws IllegalArgumentException {
-		return UnbanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
+	@ChatCommandSyntax(name = "reloadBans", description = "Reloads the ban list from file.", arguments = "")
+	public static com.google.protobuf.Message parseReloadBans(Uuid invoker, List<String> args) throws IllegalArgumentException {
+		return ReloadBans.newBuilder().setId(invoker).build();
 	}
 
 	public void banPlayer(Ban playerBan) {

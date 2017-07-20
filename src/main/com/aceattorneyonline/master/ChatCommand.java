@@ -4,20 +4,21 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
+import com.google.protobuf.Message;
 
 public interface ChatCommand {
 
 	/**
-	 * Serializes a chat command into a protobuf object. However, since protobufs
-	 * don't have a common class, it returns a type of Object instead. The protobuf
+	 * Serializes a chat command into a protobuf object. The protobuf
 	 * is then to be passed to the event bus by the chat command parser.
 	 * 
 	 * @param args
-	 *            a list of arguments passed from the chat command
+	 *            a list of arguments passed from the chat command, excluding the
+	 *            token of the command name
 	 * @return protobuf object.
 	 * @throws IllegalArgumentException
 	 */
-	public Object serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException;
+	public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException;
 
 	/**
 	 * Gets the name of the channel that the chat command event should be passed to

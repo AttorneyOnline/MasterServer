@@ -2,6 +2,8 @@ package com.aceattorneyonline.master.events;
 
 import com.aceattorneyonline.master.ChatCommand;
 import com.aceattorneyonline.master.verticles.BanList;
+import com.aceattorneyonline.master.verticles.Motd;
+import com.aceattorneyonline.master.verticles.Version;
 
 public enum Events {
 	NEW_PLAYER("ms.player.new"),
@@ -17,16 +19,15 @@ public enum Events {
 	ADVERTISER_HEARTBEAT("ms.advertiser.heartbeat"),
 	ADVERTISER_PING("ms.advertiser.ping"),
 
-	GET_VERSION("ms.version.get"),
+	GET_VERSION("ms.version.get", Version::parseGetVersion),
 
-	SET_MOTD("ms.motd.set"),
-	RELOAD_MOTD("ms.motd.reload"),
+	SET_MOTD("ms.motd.set", Motd::parseSetMotd),
+	RELOAD_MOTD("ms.motd.reload", Motd::parseReloadMotd),
 
-	// XXX: centralize chat syntax help
 	BAN_PLAYER("ms.admin.ban", BanList::parseBanCommand),
 	UNBAN_PLAYER("ms.admin.unban", BanList::parseUnbanCommand),
 
-	RELOAD_BANS("ms.util.bans.reload");
+	RELOAD_BANS("ms.util.bans.reload", BanList::parseReloadBans);
 
 	private final String name;
 	private ChatCommand command;
@@ -43,6 +44,10 @@ public enum Events {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	public ChatCommand getChatCommand() {
+		return command;
 	}
 
 }
