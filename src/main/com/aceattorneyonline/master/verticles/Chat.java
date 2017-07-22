@@ -78,7 +78,7 @@ public class Chat extends ClientListVerticle {
 						com.google.protobuf.Message msg = command.serializeCommand(senderProtoId, tokens);
 						// Pass the reply directly to the chat command sender, success or fail.
 						// It's not our responsibility anymore.
-						getVertx().eventBus().send(commandEvent.getEventName(), msg, event::reply);
+						getVertx().eventBus().send(commandEvent.getEventName(), msg.toByteArray(), event::reply);
 					} catch (IllegalArgumentException e) {
 						ChatCommandSyntax syntax = command.getSyntax();
 						event.fail(EventErrorReason.USER_ERROR,

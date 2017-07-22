@@ -14,8 +14,6 @@ import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
-import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
-import com.aceattorneyonline.master.protocol.AOProtocolWriter;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
@@ -53,6 +51,9 @@ public class NewClientReceiver extends ClientListVerticle {
 				UnconnectedClient oldClient = (UnconnectedClient)getClientById(clientId);
 				
 				Player player = new Player(oldClient);
+				player.context().endHandler(nil -> {
+					removePlayer(clientId, player);
+				});
 				oldClient.setSuccessor(player);
 				addPlayer(clientId, player);
 			} else {
@@ -68,7 +69,13 @@ public class NewClientReceiver extends ClientListVerticle {
 			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body().getBytes());
 			UUID clientId = UUID.fromString(newAdvertiser.getId().getId());
 			if (getAdvertiserById(clientId) == null) {
-				Advertiser advertiser = new Advertiser((UnconnectedClient) getClientById(clientId));
+				UnconnectedClient oldClient = (UnconnectedClient)getClientById(clientId);
+				
+				Advertiser advertiser = new Advertiser(oldClient);
+				advertiser.context().endHandler(nil -> {
+					removeAdvertiser(clientId, advertiser);
+				});
+				oldClient.setSuccessor(advertiser);
 				addAdvertiser(clientId, advertiser);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser already exists");

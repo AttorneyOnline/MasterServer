@@ -32,27 +32,30 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 	@Override
 	public void handle(NetSocket socket) {
 		socket.handler(buffer -> {
-			ProtocolHandler compatibleHandler = findHandler(buffer);
-			if (compatibleHandler != null) {
-				Client client = new UnconnectedClient(socket);
-				socket.handler(compatibleHandler.registerClient(client));
-			} else {
+			logger.info("Handling socket {}", socket.remoteAddress());
+			boolean wait = false;
+			for (ProtocolHandler handler : handlerList) {
+				switch (handler.isCompatible(buffer)) {
+				case COMPATIBLE:
+					Client client = new UnconnectedClient(socket);
+					socket.handler(handler.registerClient(client));
+					logger.debug("Client found compatible with {}", handler);
+					return;
+				case WAIT:
+					wait = true;
+					logger.debug("Will wait on {}", handler);
+					break;
+				default:
+				case FAIL:
+					logger.trace("Failed compatibility check with {}", handler);
+					break;
+				}
+			}
+			if (!wait) {
+				logger.warn("Client {} was disconnected due to invalid protocol", socket.remoteAddress());
 				socket.end(Buffer.buffer("Invalid protocol"));
 			}
 		});
-	}
-
-	/**
-	 * Iterates through the handler list to find a compatible handler. If none is
-	 * found, returns null.
-	 */
-	private ProtocolHandler findHandler(Buffer handshakeEvent) {
-		for (ProtocolHandler handler : handlerList) {
-			if (handler.isCompatible(handshakeEvent)) {
-				return handler;
-			}
-		}
-		return null;
 	}
 
 }

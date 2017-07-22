@@ -58,7 +58,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	@Override
 	public void sendChatMessage(String author, String message) {
-		if (author == "") {
+		if (author.isEmpty()) {
 			// This method was found in ms.py
 			writer.write(Buffer.buffer("CT#" + message + "\b00##%"));
 		} else {

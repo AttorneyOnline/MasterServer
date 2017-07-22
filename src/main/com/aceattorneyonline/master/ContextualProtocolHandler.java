@@ -1,5 +1,7 @@
 package com.aceattorneyonline.master;
 
+import com.aceattorneyonline.master.protocol.CompatibilityResult;
+
 import io.vertx.core.buffer.Buffer;
 
 public abstract class ContextualProtocolHandler implements ProtocolHandler {
@@ -28,7 +30,7 @@ public abstract class ContextualProtocolHandler implements ProtocolHandler {
 	 * protocol.
 	 */
 	@Override
-	public abstract boolean isCompatible(Buffer event);
+	public abstract CompatibilityResult isCompatible(Buffer event);
 
 	/** Returns a new instance of this protocol handler, with a context attached. */
 	@Override

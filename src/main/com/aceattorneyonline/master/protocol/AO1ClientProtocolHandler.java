@@ -13,8 +13,6 @@ import com.aceattorneyonline.master.ProtocolHandler;
 import com.aceattorneyonline.master.UnconnectedClient;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
-import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
-import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
@@ -25,16 +23,21 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 
-public class AO1ProtocolHandler extends ContextualProtocolHandler {
+public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(AO1ProtocolHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(AO1ClientProtocolHandler.class);
 
-	public AO1ProtocolHandler() {
+	public AO1ClientProtocolHandler() {
 		super();
 	}
 
-	public AO1ProtocolHandler(Client context) {
+	public AO1ClientProtocolHandler(Client context) {
 		super(context);
+		// XXX: this might lead to a race condition, so supervise carefully!
+		MasterServer.vertx.eventBus()
+				.send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
+						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
+						this::handleEventReply);
 	}
 
 	@Override
@@ -46,39 +49,25 @@ public class AO1ProtocolHandler extends ContextualProtocolHandler {
 		Uuid id = Uuid.newBuilder().setId(context().id().toString()).build();
 
 		switch (tokens.get(0)) {
-		case "ID":
-			// Client version: ID#[client software]#[version]#%
-			// This is an AO2 thing
-			break;
-		case "HI":
-			// Hard drive ID (can be anything in practice): HI#[hdid]#%
-			// We don't care about your hard drive ID.
-			// This is an AO2 thing
-			break;
-		case "ALL":
-			// All servers: ALL#%
-			// This is an AO2 thing
-			eventBus.send(Events.GET_SERVER_LIST.getEventName(), GetServerList.newBuilder().setId(id).build(),
-					this::handleEventReply);
-			break;
 		case "askforservers":
 			// All servers (paged): askforservers#% (returns first server on the list)
 			// But we can hack it and return all servers, and then not accept any SR
 			// requests.
+
+			// HACK: this check might not be needed after all
 			if (context() instanceof UnconnectedClient && ((UnconnectedClient) context()).getSuccessor() == null) {
-				eventBus.send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder().setId(id).build(),
+				eventBus.send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder().setId(id).build().toByteArray(),
 						this::handleEventReply);
 			}
 			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(),
-					GetServerListPaged.newBuilder().setId(id).setPage(0).build(), this::handleEventReply);
+					GetServerListPaged.newBuilder().setId(id).setPage(0).build().toByteArray(), this::handleEventReply);
 			break;
 		case "SR":
 			// Page of servers: SR#[id]#%
 			// Starts from 0, but returns second server!
 			// But when there are no more pages, there is no response.
-			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(),
-					GetServerListPaged.newBuilder().setId(id).setPage(Integer.parseInt(tokens.get(1) + 1)).build(),
-					this::handleEventReply);
+			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(), GetServerListPaged.newBuilder().setId(id)
+					.setPage(Integer.parseInt(tokens.get(1) + 1)).build().toByteArray(), this::handleEventReply);
 			break;
 		case "CT":
 			// Chat: CT#[username]#[message]#%
@@ -89,27 +78,13 @@ public class AO1ProtocolHandler extends ContextualProtocolHandler {
 				eventBus.send(Events.SEND_CHAT.getEventName(), tokens.get(2), this::handleEventReply);
 			}
 			break;
-		//// servers
-		case "SCC":
-			// Server heartbeat: SCC#[port]#[name]#[description]#[server software]#%
-			// This is a server thing
-			if (tokens.size() == 6) {
-				eventBus.send(Events.ADVERTISER_HEARTBEAT.getEventName(),
-						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(tokens.get(2))
-								.setDescription(tokens.get(3)).setVersion(tokens.get(4)).build(),
-						reply -> {
-							if (reply.succeeded()) {
-								context().protocolWriter().sendNewHeartbeatSuccess();
-							} else {
-								context().context().close();
-							}
-						});
-			}
+		default:
+			logger.warn("Unknown message from {}: {}", context(), packet);
 			break;
 		}
 	}
 
-	private void handleEventReply(AsyncResult<Message<String>> reply) {
+	protected void handleEventReply(AsyncResult<Message<String>> reply) {
 		if (reply.succeeded() && reply.result().body() != null) {
 			context().protocolWriter().sendSystemMessage(reply.result().body());
 		} else if (reply.failed()) {
@@ -117,6 +92,7 @@ public class AO1ProtocolHandler extends ContextualProtocolHandler {
 			int errorCode = e.failureCode();
 			String message = e.getMessage();
 			switch (errorCode) {
+			default: // For unhandled exceptions
 			case EventErrorReason.INTERNAL_ERROR:
 				context().protocolWriter().sendSystemMessage("Internal error: " + message);
 				logger.error("Internal error: {}", message);
@@ -135,19 +111,21 @@ public class AO1ProtocolHandler extends ContextualProtocolHandler {
 	}
 
 	@Override
-	public boolean isCompatible(Buffer event) {
+	public CompatibilityResult isCompatible(Buffer event) {
 		if (event.length() == 0) {
 			// AO1 protocol will always wait on servercheok so we'll send that out.
 			context().context().write(Buffer.buffer("servercheok#1.7.5#%"));
-			return true;
+			return CompatibilityResult.WAIT;
+		} else if (event.toString().equals("askforservers#%")) {
+			return CompatibilityResult.COMPATIBLE;
 		}
-		return false;
+		return CompatibilityResult.FAIL;
 	}
 
 	@Override
 	public ProtocolHandler registerClient(Client client) {
 		client.setProtocolWriter(new AOProtocolWriter(client.context()));
-		return new AO1ProtocolHandler(client);
+		return new AO1ClientProtocolHandler(client);
 	}
 
 }

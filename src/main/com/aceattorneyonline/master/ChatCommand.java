@@ -3,6 +3,7 @@ package com.aceattorneyonline.master;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.Message;
 

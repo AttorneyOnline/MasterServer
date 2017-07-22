@@ -10,8 +10,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.protocol.AO1ProtocolHandler;
-import com.aceattorneyonline.master.protocol.AO2ProtocolHandler;
+import com.aceattorneyonline.master.protocol.AO1ClientProtocolHandler;
+import com.aceattorneyonline.master.protocol.AO2ClientProtocolHandler;
+import com.aceattorneyonline.master.protocol.AOServerProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
 import com.aceattorneyonline.master.verticles.Motd;
@@ -61,8 +62,9 @@ public class MasterServer {
 
 	private void setupProtocolHandlers() {
 		defaultHandler = new DefaultProtocolHandler();
-		defaultHandler.register(new AO1ProtocolHandler());
-		defaultHandler.register(new AO2ProtocolHandler());
+		defaultHandler.register(new AO1ClientProtocolHandler());
+		defaultHandler.register(new AO2ClientProtocolHandler());
+		defaultHandler.register(new AOServerProtocolHandler());
 	}
 
 	private void setupVerticles() {
@@ -83,14 +85,14 @@ public class MasterServer {
 			.setTcpKeepAlive(true)
 			.setIdleTimeout(10);
 		vertx.createNetServer(options)
+			.connectHandler(defaultHandler)
 			.listen(result -> {
 				if (result.succeeded()) {
 					logger.info("Now listening at port {}", HOST_PORT);
 				} else {
 					logger.error("Error binding at port {}", HOST_PORT, result.cause());
 				}
-			})
-			.connectHandler(defaultHandler);
+			});
 		// @formatter:on
 	}
 
