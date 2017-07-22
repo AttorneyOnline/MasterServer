@@ -76,14 +76,13 @@ public class Chat extends ClientListVerticle {
 					ChatCommand command = commandEvent.getChatCommand();
 					try {
 						com.google.protobuf.Message msg = command.serializeCommand(senderProtoId, tokens);
-						getVertx().eventBus().send(commandEvent.getEventName(), msg, reply -> {
-							// Pass the reply directly to the chat command sender, success or fail.
-							// It's not our responsibility anymore.
-							event.reply(reply);
-						});
+						// Pass the reply directly to the chat command sender, success or fail.
+						// It's not our responsibility anymore.
+						getVertx().eventBus().send(commandEvent.getEventName(), msg, event::reply);
 					} catch (IllegalArgumentException e) {
 						ChatCommandSyntax syntax = command.getSyntax();
-						event.fail(EventErrorReason.USER_ERROR, "Syntax error.\nCommand usage: " + syntax.name() + " " + syntax.arguments());
+						event.fail(EventErrorReason.USER_ERROR,
+								"Syntax error.\nCommand usage: " + syntax.name() + " " + syntax.arguments());
 					}
 				} else {
 					logger.info("Parsed command was not found in commands list");

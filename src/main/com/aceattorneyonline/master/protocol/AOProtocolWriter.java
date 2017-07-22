@@ -90,9 +90,11 @@ public class AOProtocolWriter implements ProtocolWriter {
 	public void sendConnectionCheck() {
 		writer.write(Buffer.buffer("CHECK#%"));
 	}
-
-	public void sendClientConnectSuccess() {
-		writer.write(Buffer.buffer("servercheok#1.7.5#%"));
+	
+	@Override
+	public void sendBanNotification(String message) {
+		sendSystemMessage(message);
+		writer.write(Buffer.buffer("DOOM#%"));
 	}
 
 	private String sanitize(String str) {

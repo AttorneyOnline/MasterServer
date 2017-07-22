@@ -47,7 +47,7 @@ public class BanList extends ClientListVerticle {
 		eventBus.consumer(Events.BAN_PLAYER.getEventName(), this::handleBanClient);
 		eventBus.consumer(Events.UNBAN_PLAYER.getEventName(), this::handleUnbanClient);
 		eventBus.consumer(Events.RELOAD_BANS.getEventName(), this::handleReloadBans);
-		// TODO: read ban list file
+		// FIXME: read ban list file
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public class BanList extends ClientListVerticle {
 							banName = ((Player) matchingClient).name();
 						}
 						matchingClient.protocolWriter()
-								.sendSystemMessage("You have been banned. Reason: " + ban.getReason());
+								.sendBanNotification("You have been banned. Reason: " + ban.getReason());
 						matchingClient.context().end();
 					}
 					banPlayer(new Ban(addressString, banName, ban.getReason()));
@@ -124,7 +124,8 @@ public class BanList extends ClientListVerticle {
 	}
 
 	@ChatCommandSyntax(name = "ban", description = "Bans a player.", arguments = "<player/ip> <reason>")
-	public static com.google.protobuf.Message parseBanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+	public static com.google.protobuf.Message parseBanCommand(Uuid invoker, List<String> args)
+			throws IllegalArgumentException {
 		try {
 			if (args.size() >= 2) {
 				String reason = String.join(" ", args.subList(1, args.size()));
@@ -172,7 +173,8 @@ public class BanList extends ClientListVerticle {
 	}
 
 	@ChatCommandSyntax(name = "unban", description = "Unbans a player.", arguments = "<ip>")
-	public static com.google.protobuf.Message parseUnbanCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+	public static com.google.protobuf.Message parseUnbanCommand(Uuid invoker, List<String> args)
+			throws IllegalArgumentException {
 		try {
 			if (args.size() == 1) {
 				return UnbanPlayer.newBuilder().setId(invoker).setTarget(args.get(0)).build();
@@ -185,11 +187,12 @@ public class BanList extends ClientListVerticle {
 	}
 
 	public void handleReloadBans(Message<String> event) {
-		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // TODO handleReloadBans
+		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleReloadBans
 	}
 
 	@ChatCommandSyntax(name = "reloadBans", description = "Reloads the ban list from file.", arguments = "")
-	public static com.google.protobuf.Message parseReloadBans(Uuid invoker, List<String> args) throws IllegalArgumentException {
+	public static com.google.protobuf.Message parseReloadBans(Uuid invoker, List<String> args)
+			throws IllegalArgumentException {
 		return ReloadBans.newBuilder().setId(invoker).build();
 	}
 

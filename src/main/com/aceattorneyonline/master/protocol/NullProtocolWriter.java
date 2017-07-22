@@ -56,5 +56,10 @@ public class NullProtocolWriter implements ProtocolWriter {
 	public void sendConnectionCheck() {
 		logger.debug("Tried to send connection check to null protocol writer");
 	}
+	
+	@Override
+	public void sendBanNotification(String message) {
+		logger.debug("Tried to send ban notification to null protocol writer");
+	}
 
 }

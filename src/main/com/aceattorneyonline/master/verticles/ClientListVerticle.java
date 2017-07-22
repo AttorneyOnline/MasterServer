@@ -15,7 +15,7 @@ import io.vertx.core.AbstractVerticle;
  * Parent class for all verticles that require a client list context.
  * 
  * <p>
- * XXX: this configuration sucks
+ * XXX: this design sucks
  */
 public abstract class ClientListVerticle extends AbstractVerticle {
 

@@ -44,7 +44,7 @@ public class Motd extends ClientListVerticle {
 	}
 
 	public void handleSetMotd(Message<String> event) {
-		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // TODO handleSetMotd
+		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleSetMotd
 	}
 	
 	@ChatCommandSyntax(name = "setmotd", description = "Sets the MOTD permanently.", arguments = "<message>")
@@ -57,7 +57,7 @@ public class Motd extends ClientListVerticle {
 	}
 
 	public void handleReloadMotd(Message<String> event) {
-		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // TODO handleReloadMotd
+		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleReloadMotd
 	}
 	
 	@ChatCommandSyntax(name = "reloadmotd", description = "Reloads the MOTD to file.", arguments = "")

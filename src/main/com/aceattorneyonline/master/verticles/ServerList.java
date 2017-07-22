@@ -76,7 +76,8 @@ public class ServerList extends ClientListVerticle {
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");
 		} catch (IndexOutOfBoundsException e) {
-			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not get a list at that page");
+			//event.fail(EventErrorReason.INTERNAL_ERROR, "Could not get a list at that page");
+			// Actually, the canonical response is nothing.
 		}
 	}
 

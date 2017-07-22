@@ -41,4 +41,8 @@ public interface ProtocolWriter {
 
 	/** Sends a periodic check to very that the connection is still open. */
 	public void sendConnectionCheck();
+	
+	/** Sends a ban notification. */
+	public void sendBanNotification(String message);
+
 }

@@ -11,6 +11,7 @@ import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.UnconnectedClient;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
+import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
@@ -49,22 +50,16 @@ public class NewClientReceiver extends ClientListVerticle {
 				// HACK: This cast is relatively safe, but I can't find a clean way to get it
 				// off.
 				// Maybe getUnconnectedClientById()?
-				Player player = new Player((UnconnectedClient) getClientById(clientId));
-
+				UnconnectedClient oldClient = (UnconnectedClient)getClientById(clientId);
+				
+				Player player = new Player(oldClient);
+				oldClient.setSuccessor(player);
 				addPlayer(clientId, player);
-				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build(), reply -> {
-					event.reply(reply);
-				});
-
-				// HACK: send servercheok for old AO clients via type cast
-				if (player.protocolWriter() instanceof AOProtocolWriter) {
-					((AOProtocolWriter) (player.protocolWriter())).sendClientConnectSuccess();
-				}
 			} else {
-				event.fail(2, "Player already exists");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Player already exists");
 			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse NewPlayer protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse NewPlayer protobuf");
 		}
 	}
 
@@ -76,10 +71,10 @@ public class NewClientReceiver extends ClientListVerticle {
 				Advertiser advertiser = new Advertiser((UnconnectedClient) getClientById(clientId));
 				addAdvertiser(clientId, advertiser);
 			} else {
-				event.fail(2, "Advertiser already exists");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser already exists");
 			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse NewAdvertiser protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse NewAdvertiser protobuf");
 		}
 	}
 

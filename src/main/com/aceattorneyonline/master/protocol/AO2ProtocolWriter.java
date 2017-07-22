@@ -15,10 +15,5 @@ public class AO2ProtocolWriter extends AOProtocolWriter {
 		// Not supported in AO2 yet:
 		// writer.write(Buffer.buffer("MCT#" + message + "#%"));
 	}
-	
-	@Override
-	public void sendClientConnectSuccess() {
-		// Nothing - we don't send servercheok to AO2
-	}
 
 }
