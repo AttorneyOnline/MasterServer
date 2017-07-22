@@ -12,6 +12,7 @@ import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
+import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
@@ -35,7 +36,6 @@ public class NewClientReceiver extends ClientListVerticle {
 	}
 
 	public void handleNewPlayer(Message<byte[]> event) {
-		logger.debug("Handling new player event");
 		try {
 			NewPlayer newPlayer = NewPlayer.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newPlayer.getId().getId());
@@ -47,7 +47,9 @@ public class NewClientReceiver extends ClientListVerticle {
 				});
 				oldClient.setSuccessor(player);
 				promoteToPlayer(clientId, player);
-				event.reply(null);
+				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
+					event.reply(reply.result());
+				});
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Player already exists");
 			}
