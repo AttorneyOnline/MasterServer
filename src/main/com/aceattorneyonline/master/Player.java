@@ -1,16 +1,32 @@
 package com.aceattorneyonline.master;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Represents a player (non-server) that is currently connected to the master
  * server.
  */
 public class Player extends Client {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Player.class);
+	
 	private String name;
 	private boolean admin;
+
+	// This chat receiver is kept here as a strong reference.
+	@SuppressWarnings("unused")
+	private final ChatReceiver chatReceiver;
 
 	/** Instantiates a connected player based from an unconnected client. */
 	public Player(UnconnectedClient client) {
 		super(client);
+		chatReceiver = new ChatReceiver(this);
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+		logger.debug("User {} set their name to {}", address(), name);
 	}
 
 	/**
@@ -32,6 +48,7 @@ public class Player extends Client {
 	/** Sets the admin status of a player. <em>Use with caution!</em> */
 	public void setAdmin(boolean admin) {
 		this.admin = admin;
+		logger.debug("User {} set themselves to admin: {}", address(), admin);
 	}
 
 	/** Returns whether or not player has full admin rights. */

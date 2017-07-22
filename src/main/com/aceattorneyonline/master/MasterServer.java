@@ -1,7 +1,9 @@
 package com.aceattorneyonline.master;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +24,9 @@ import io.vertx.core.net.NetServerOptions;
 
 public class MasterServer {
 	private static final Logger logger = LoggerFactory.getLogger(MasterServer.class);
+
+	public static final String SERVER_NICK = "AOMS";
+	public static final List<String> RESERVED_NICKS = Arrays.asList("AOMS", "Master Server", "System", "RCON", "Server", "MS");
 
 	private static final int HOST_PORT = 27016;
 

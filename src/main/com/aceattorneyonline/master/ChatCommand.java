@@ -6,11 +6,20 @@ import java.util.List;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.Message;
 
+/**
+ * Represents a chat command that can be invoked by the chat command parser.
+ * 
+ * Each chat command may correspond to one internal event passed through the
+ * event bus, each of which is registered in {@link Events}. The chat command
+ * parser then receives a full list of chat commands from the events list and
+ * can know what event and parser corresponds with the chat command, so that the
+ * arguments can be converted into a protobuf and sent as an event.
+ */
 public interface ChatCommand {
 
 	/**
-	 * Serializes a chat command into a protobuf object. The protobuf
-	 * is then to be passed to the event bus by the chat command parser.
+	 * Serializes a chat command into a protobuf object. The protobuf is then to be
+	 * passed to the event bus by the chat command parser.
 	 * 
 	 * @param args
 	 *            a list of arguments passed from the chat command, excluding the
@@ -20,13 +29,7 @@ public interface ChatCommand {
 	 */
 	public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException;
 
-	/**
-	 * Gets the name of the channel that the chat command event should be passed to
-	 * in the event bus.
-	 */
-	// public String getEventChannelName();
-
-	/** Gets the syntax of the chat command. */
+	/** Gets the syntax of the chat command itself. */
 	public default ChatCommandSyntax getSyntax() {
 		try {
 			Method serializeMethod = getClass().getMethod("serializeCommand", Uuid.class, List.class);

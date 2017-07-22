@@ -16,6 +16,7 @@ import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
+import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
@@ -28,8 +29,6 @@ import io.vertx.core.net.SocketAddress;
 public class ServerList extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServerList.class);
-
-	private Map<UUID, Advertiser> advertiserList = new HashMap<>();
 
 	private Comparator<AdvertisedServer> listComparator = (a, b) -> a.uptime().compareTo(b.uptime());
 	private Map<SocketAddress, AdvertisedServer> serverList = new HashMap<>();
@@ -63,7 +62,7 @@ public class ServerList extends ClientListVerticle {
 			Client client = getClientById(id);
 			client.protocolWriter().sendServerEntries(serverListCache);
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse GetServerList protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerList protobuf");
 		}
 	}
 
@@ -75,9 +74,9 @@ public class ServerList extends ClientListVerticle {
 			AdvertisedServer server = getSortedServerList().get(pageNo);
 			getClientById(id).protocolWriter().sendServerEntry(server);
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse GetServerListPaged protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");
 		} catch (IndexOutOfBoundsException e) {
-			event.fail(1, "Could not get a list at that page");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not get a list at that page");
 		}
 	}
 
@@ -85,13 +84,17 @@ public class ServerList extends ClientListVerticle {
 		try {
 			Heartbeat hb = Heartbeat.parseFrom(event.body().getBytes());
 			UUID id = UUID.fromString(hb.getId().getId());
-			Advertiser advertiser = advertiserList.get(id);
-			AdvertisedServer server =
-					new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(), hb.getVersion());
-			advertiser.setServer(server);
-			addServer(server);
+			Advertiser advertiser = getAdvertiserById(id);
+			if (advertiser != null) {
+				AdvertisedServer server = new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(),
+						hb.getVersion());
+				advertiser.setServer(server);
+				addServer(server);
+			} else {
+				event.fail(EventErrorReason.SECURITY_ERROR, "Client is not an advertiser");
+			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse Heartbeat protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse Heartbeat protobuf");
 		}
 	}
 
@@ -99,14 +102,14 @@ public class ServerList extends ClientListVerticle {
 		try {
 			Ping ping = Ping.parseFrom(event.body().getBytes());
 			UUID id = UUID.fromString(ping.getId().getId());
-			Advertiser advertiser = advertiserList.get(id);
+			Advertiser advertiser = getAdvertiserById(id);
 			if (advertiser != null && advertiser.server() != null) {
 				advertiser.protocolWriter().sendPong();
 			} else {
 				advertiser.protocolWriter().sendPongError();
 			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse Ping protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse Ping protobuf");
 		}
 	}
 

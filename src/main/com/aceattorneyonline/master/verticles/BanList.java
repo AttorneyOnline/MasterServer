@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.omg.PortableInterceptor.USER_EXCEPTION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.AdminEventProtos.BanPlayer;
 import com.aceattorneyonline.master.events.AdminEventProtos.ReloadBans;
 import com.aceattorneyonline.master.events.AdminEventProtos.UnbanPlayer;
+import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -42,9 +44,9 @@ public class BanList extends ClientListVerticle {
 		logger.info("Bans list verticle starting");
 
 		EventBus eventBus = getVertx().eventBus();
-		eventBus.consumer(Events.BAN_PLAYER.toString(), this::handleBanClient);
-		eventBus.consumer(Events.UNBAN_PLAYER.toString(), this::handleUnbanClient);
-		eventBus.consumer(Events.RELOAD_BANS.toString(), this::handleReloadBans);
+		eventBus.consumer(Events.BAN_PLAYER.getEventName(), this::handleBanClient);
+		eventBus.consumer(Events.UNBAN_PLAYER.getEventName(), this::handleUnbanClient);
+		eventBus.consumer(Events.RELOAD_BANS.getEventName(), this::handleReloadBans);
 		// TODO: read ban list file
 	}
 
@@ -70,9 +72,9 @@ public class BanList extends ClientListVerticle {
 			logger.debug("User {} is requesting to ban {}", id.toString(), targetText);
 
 			if (requestingPlayer == null) {
-				event.fail(1, "Requester is not a player.");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
 			} else if (!requestingPlayer.hasAdmin()) {
-				event.fail(2, "Requester does not have admin rights.");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Requester does not have admin rights.");
 			}
 
 			// Try parsing by name first.
@@ -84,7 +86,7 @@ public class BanList extends ClientListVerticle {
 			Collection<Player> targets = searchPlayerByName(targetText);
 			int targetsSize = targets.size();
 			if (targetsSize > 1) {
-				event.fail(1, "Ambiguous result; please refine your search.");
+				event.fail(EventErrorReason.USER_ERROR, "Ambiguous result; please refine your search.");
 			} else if (targetsSize == 1) {
 				target = targets.iterator().next(); // Seems to be better than using a Stream and an Optional...
 				target.protocolWriter().sendSystemMessage("You have been banned. Reason: " + ban.getReason());
@@ -113,11 +115,11 @@ public class BanList extends ClientListVerticle {
 					banPlayer(new Ban(addressString, banName, ban.getReason()));
 					event.reply("Successfully banned " + addressString);
 				} else {
-					event.fail(1, "No players found to ban.");
+					event.fail(EventErrorReason.USER_ERROR, "No players found to ban.");
 				}
 			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse BanPlayer protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse BanPlayer protobuf");
 		}
 	}
 
@@ -147,9 +149,9 @@ public class BanList extends ClientListVerticle {
 			logger.debug("User {} is requesting to unban {}", requestingPlayer, targetText);
 
 			if (requestingPlayer == null) {
-				event.fail(2, "Requester is not a player.");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
 			} else if (!requestingPlayer.hasAdmin()) {
-				event.fail(2, "Requester does not have admin rights.");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Requester does not have admin rights.");
 			}
 
 			// Try parsing by IP address
@@ -159,13 +161,13 @@ public class BanList extends ClientListVerticle {
 				if (unbanPlayer(addressString)) {
 					event.reply("Successfully unbanned " + addressString);
 				} else {
-					event.fail(1, "The specified IP address was not found in the ban list.");
+					event.fail(EventErrorReason.USER_ERROR, "The specified IP address was not found in the ban list.");
 				}
 			} else {
-				event.fail(1, "The specified IP address could not be parsed.");
+				event.fail(EventErrorReason.INTERNAL_ERROR, "The specified IP address could not be parsed.");
 			}
 		} catch (InvalidProtocolBufferException e) {
-			event.fail(1, "Could not parse UnbanPlayer protobuf");
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse UnbanPlayer protobuf");
 		}
 	}
 
@@ -183,7 +185,7 @@ public class BanList extends ClientListVerticle {
 	}
 
 	public void handleReloadBans(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO handleReloadBans
+		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // TODO handleReloadBans
 	}
 
 	@ChatCommandSyntax(name = "reloadBans", description = "Reloads the ban list from file.", arguments = "")

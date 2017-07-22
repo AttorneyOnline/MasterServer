@@ -6,8 +6,16 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
+import com.aceattorneyonline.master.Player;
+import com.aceattorneyonline.master.UnconnectedClient;
+import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.Events;
+import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
+import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
+import com.aceattorneyonline.master.protocol.AOProtocolWriter;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -34,11 +42,45 @@ public class NewClientReceiver extends ClientListVerticle {
 	}
 
 	public void handleNewPlayer(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO handleNewPlayer
+		try {
+			NewPlayer newPlayer = NewPlayer.parseFrom(event.body().getBytes());
+			UUID clientId = UUID.fromString(newPlayer.getId().getId());
+			if (getPlayerById(clientId) == null) {
+				// HACK: This cast is relatively safe, but I can't find a clean way to get it
+				// off.
+				// Maybe getUnconnectedClientById()?
+				Player player = new Player((UnconnectedClient) getClientById(clientId));
+
+				addPlayer(clientId, player);
+				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build(), reply -> {
+					event.reply(reply);
+				});
+
+				// HACK: send servercheok for old AO clients via type cast
+				if (player.protocolWriter() instanceof AOProtocolWriter) {
+					((AOProtocolWriter) (player.protocolWriter())).sendClientConnectSuccess();
+				}
+			} else {
+				event.fail(2, "Player already exists");
+			}
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse NewPlayer protobuf");
+		}
 	}
 
 	public void handleNewAdvertiser(Message<String> event) {
-		event.fail(0, "not implemented"); // TODO handleNewAdvertiser
+		try {
+			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body().getBytes());
+			UUID clientId = UUID.fromString(newAdvertiser.getId().getId());
+			if (getAdvertiserById(clientId) == null) {
+				Advertiser advertiser = new Advertiser((UnconnectedClient) getClientById(clientId));
+				addAdvertiser(clientId, advertiser);
+			} else {
+				event.fail(2, "Advertiser already exists");
+			}
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(1, "Could not parse NewAdvertiser protobuf");
+		}
 	}
 
 }

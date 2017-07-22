@@ -34,3 +34,12 @@ message GetServerListPaged {
 	Uuid id = 1;
 	uint32 page = 2;
 }
+
+// Flood control handled by SendChat
+message GetChatCommandList {
+}
+
+// Flood control handled by SendChat
+message GetChatCommandHelp {
+	string command = 1;
+}

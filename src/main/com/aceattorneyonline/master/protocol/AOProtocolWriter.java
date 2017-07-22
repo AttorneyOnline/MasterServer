@@ -91,6 +91,10 @@ public class AOProtocolWriter implements ProtocolWriter {
 		writer.write(Buffer.buffer("CHECK#%"));
 	}
 
+	public void sendClientConnectSuccess() {
+		writer.write(Buffer.buffer("servercheok#1.7.5#%"));
+	}
+
 	private String sanitize(String str) {
 		return str.replaceAll("%", "<percent>")
 				.replaceAll("#", "<num>")

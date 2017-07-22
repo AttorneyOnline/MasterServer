@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 
@@ -20,9 +21,11 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 
 	private Map<UUID, Client> clientList;
 	private Map<UUID, Player> playerList;
+	private Map<UUID, Advertiser> advertiserList;
 
 	public ClientListVerticle(Map<UUID, Client> clientList) {
 		this.clientList = clientList;
+		// XXX: playerList and advertiserList aren't populated!
 	}
 
 	protected Client getClientById(UUID id) {
@@ -31,6 +34,10 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 
 	protected Player getPlayerById(UUID id) {
 		return playerList.get(id);
+	}
+
+	protected Advertiser getAdvertiserById(UUID id) {
+		return advertiserList.get(id);
 	}
 
 	private void addClient(UUID id, Client client) {
@@ -60,6 +67,20 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		removeClient(id);
 	}
 
+	public void addAdvertiser(UUID id, Advertiser advertiser) {
+		synchronized (advertiserList) {
+			advertiserList.put(id, advertiser);
+		}
+		addClient(id, advertiser);
+	}
+
+	public void removeAdvertiser(UUID id, Advertiser advertiser) {
+		synchronized (advertiserList) {
+			advertiserList.remove(id);
+		}
+		removeClient(id);
+	}
+
 	/** Retrieves a list of all connected clients. */
 	public Collection<Client> getClientsList() {
 		return clientList.values();
@@ -70,12 +91,17 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		return playerList.values();
 	}
 
+	/** Retrieves a list of all connected advertisers. */
+	public Collection<Advertiser> getAdvertisersList() {
+		return advertiserList.values();
+	}
+
 	/** Gets a list of connected players that match a name. */
 	public Collection<Player> searchPlayerByName(String name) {
 		return playerList.values().stream().filter(player -> player.name().toLowerCase().contains(name))
 				.collect(Collectors.toList());
 	}
-	
+
 	/** Gets a list of connected clients that match an IP address. */
 	public Collection<Client> searchClientByAddress(String address) {
 		return clientList.values().stream().filter(client -> client.address().host().equals(address))
