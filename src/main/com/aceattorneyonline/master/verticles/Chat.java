@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.ChatCommand;
 import com.aceattorneyonline.master.ChatCommandSyntax;
-import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
@@ -31,10 +30,6 @@ public class Chat extends ClientListVerticle {
 
 	private final Map<String, Events> commands = Events.getAllChatCommands();
 
-	public Chat(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("Chat verticle starting");
@@ -49,9 +44,9 @@ public class Chat extends ClientListVerticle {
 		logger.info("Chat verticle stopping");
 	}
 
-	public void handleSendChat(Message<String> event) {
+	public void handleSendChat(Message<byte[]> event) {
 		try {
-			SendChat chat = SendChat.parseFrom(event.body().getBytes());
+			SendChat chat = SendChat.parseFrom(event.body());
 			Uuid senderProtoId = chat.getId();
 			UUID senderId = UUID.fromString(senderProtoId.getId());
 			Player sender = getPlayerById(senderId);
@@ -67,6 +62,7 @@ public class Chat extends ClientListVerticle {
 				// TODO make !name command to change one's name
 			} else if (message.isEmpty()) {
 				logger.warn("{} tried to send an empty message!", sender);
+				event.reply(null);
 			} else if (message.charAt(0) == '!') {
 				logger.info("{} ran a command: {}", senderId.toString(), message);
 				List<String> tokens = Chat.parseChatCommand(message);
@@ -92,7 +88,8 @@ public class Chat extends ClientListVerticle {
 				if (sender.name() == null) {
 					sender.setName(senderName);
 				}
-				getVertx().eventBus().publish(Events.BROADCAST_CHAT.toString(), message);
+				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
+				event.reply(null);
 				logger.info("{}: {}", senderId.toString(), message);
 			}
 			// TODO: anti-flood
@@ -101,7 +98,7 @@ public class Chat extends ClientListVerticle {
 		}
 	}
 
-	public void handleCommandList(Message<String> event) {
+	public void handleCommandList(Message<byte[]> event) {
 		StringBuilder listBuilder = new StringBuilder();
 		listBuilder.append("Commands list:\n");
 		for (Events commandEvent : commands.values()) {
@@ -117,9 +114,9 @@ public class Chat extends ClientListVerticle {
 		return GetChatCommandList.newBuilder().build();
 	}
 
-	public void handleCommandHelp(Message<String> event) {
+	public void handleCommandHelp(Message<byte[]> event) {
 		try {
-			GetChatCommandHelp help = GetChatCommandHelp.parseFrom(event.body().getBytes());
+			GetChatCommandHelp help = GetChatCommandHelp.parseFrom(event.body());
 			Events commandEvent = commands.get(help.getCommand());
 			if (commandEvent != null) {
 				ChatCommandSyntax syntax = commandEvent.getChatCommand().getSyntax();

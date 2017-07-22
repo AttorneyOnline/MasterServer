@@ -1,13 +1,11 @@
 package com.aceattorneyonline.master.verticles;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.Advertiser;
-import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.UnconnectedClient;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
@@ -23,10 +21,6 @@ public class NewClientReceiver extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(NewClientReceiver.class);
 
-	public NewClientReceiver(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("New client receiver verticle starting");
@@ -40,22 +34,20 @@ public class NewClientReceiver extends ClientListVerticle {
 		logger.info("New client receiver verticle stopping (no new clients will be accepted)");
 	}
 
-	public void handleNewPlayer(Message<String> event) {
+	public void handleNewPlayer(Message<byte[]> event) {
+		logger.debug("Handling new player event");
 		try {
-			NewPlayer newPlayer = NewPlayer.parseFrom(event.body().getBytes());
+			NewPlayer newPlayer = NewPlayer.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newPlayer.getId().getId());
 			if (getPlayerById(clientId) == null) {
-				// HACK: This cast is relatively safe, but I can't find a clean way to get it
-				// off.
-				// Maybe getUnconnectedClientById()?
-				UnconnectedClient oldClient = (UnconnectedClient)getClientById(clientId);
-				
+				UnconnectedClient oldClient = getUnconnectedClientById(clientId);
 				Player player = new Player(oldClient);
 				player.context().endHandler(nil -> {
 					removePlayer(clientId, player);
 				});
 				oldClient.setSuccessor(player);
-				addPlayer(clientId, player);
+				promoteToPlayer(clientId, player);
+				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Player already exists");
 			}
@@ -64,19 +56,19 @@ public class NewClientReceiver extends ClientListVerticle {
 		}
 	}
 
-	public void handleNewAdvertiser(Message<String> event) {
+	public void handleNewAdvertiser(Message<byte[]> event) {
 		try {
-			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body().getBytes());
+			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newAdvertiser.getId().getId());
 			if (getAdvertiserById(clientId) == null) {
-				UnconnectedClient oldClient = (UnconnectedClient)getClientById(clientId);
-				
+				UnconnectedClient oldClient = (UnconnectedClient) getClientById(clientId);
 				Advertiser advertiser = new Advertiser(oldClient);
 				advertiser.context().endHandler(nil -> {
 					removeAdvertiser(clientId, advertiser);
 				});
 				oldClient.setSuccessor(advertiser);
-				addAdvertiser(clientId, advertiser);
+				promoteToAdvertiser(clientId, advertiser);
+				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser already exists");
 			}

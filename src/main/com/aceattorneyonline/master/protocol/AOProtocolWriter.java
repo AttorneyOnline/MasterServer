@@ -100,7 +100,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 	private String sanitize(String str) {
 		return str.replaceAll("%", "<percent>")
 				.replaceAll("#", "<num>")
-				.replaceAll("$", "<dollar>")
+				.replaceAll("\\$", "<dollar>")
 				.replaceAll("&", "<and>");
 	}
 

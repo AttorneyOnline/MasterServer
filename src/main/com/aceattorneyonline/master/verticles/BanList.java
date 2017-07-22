@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -34,10 +33,6 @@ public class BanList extends ClientListVerticle {
 
 	private final Set<Ban> banList = new TreeSet<>();
 
-	public BanList(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("Bans list verticle starting");
@@ -61,9 +56,9 @@ public class BanList extends ClientListVerticle {
 	 * found, the request is canceled. Otherwise, the ban reason is parsed and the
 	 * ban is added/updated.
 	 */
-	public void handleBanClient(Message<String> event) {
+	public void handleBanClient(Message<byte[]> event) {
 		try {
-			BanPlayer ban = BanPlayer.parseFrom(event.body().getBytes());
+			BanPlayer ban = BanPlayer.parseFrom(event.body());
 			UUID id = UUID.fromString(ban.getId().getId());
 			Player requestingPlayer = getPlayerById(id);
 			String targetText = ban.getTarget();
@@ -139,9 +134,9 @@ public class BanList extends ClientListVerticle {
 		}
 	}
 
-	public void handleUnbanClient(Message<String> event) {
+	public void handleUnbanClient(Message<byte[]> event) {
 		try {
-			UnbanPlayer ban = UnbanPlayer.parseFrom(event.body().getBytes());
+			UnbanPlayer ban = UnbanPlayer.parseFrom(event.body());
 			UUID id = UUID.fromString(ban.getId().getId());
 			Player requestingPlayer = getPlayerById(id);
 			String targetText = ban.getTarget();
@@ -185,7 +180,7 @@ public class BanList extends ClientListVerticle {
 		}
 	}
 
-	public void handleReloadBans(Message<String> event) {
+	public void handleReloadBans(Message<byte[]> event) {
 		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleReloadBans
 	}
 

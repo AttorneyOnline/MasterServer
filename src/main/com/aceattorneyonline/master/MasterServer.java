@@ -2,10 +2,7 @@ package com.aceattorneyonline.master;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +40,6 @@ public class MasterServer {
 		}
 	}
 
-	private Map<UUID, Client> clientList = new HashMap<>();
-
 	private DefaultProtocolHandler defaultHandler;
 
 	public static final Vertx vertx = Vertx.vertx();
@@ -68,12 +63,12 @@ public class MasterServer {
 	}
 
 	private void setupVerticles() {
-		vertx.deployVerticle(new NewClientReceiver(clientList));
-		vertx.deployVerticle(new ServerList(clientList));
-		vertx.deployVerticle(new BanList(clientList));
-		vertx.deployVerticle(new Chat(clientList));
-		vertx.deployVerticle(new Motd(clientList));
-		vertx.deployVerticle(new Version(clientList));
+		vertx.deployVerticle(NewClientReceiver.class.getName());
+		vertx.deployVerticle(ServerList.class.getName());
+		vertx.deployVerticle(BanList.class.getName());
+		vertx.deployVerticle(Chat.class.getName());
+		vertx.deployVerticle(Motd.class.getName());
+		vertx.deployVerticle(Version.class.getName());
 	}
 
 	private void createVertxServer() {
@@ -82,7 +77,6 @@ public class MasterServer {
 		// @formatter:off
 		NetServerOptions options = new NetServerOptions()
 			.setPort(HOST_PORT)
-			.setTcpKeepAlive(true)
 			.setIdleTimeout(10);
 		vertx.createNetServer(options)
 			.connectHandler(defaultHandler)

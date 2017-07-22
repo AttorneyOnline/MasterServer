@@ -10,10 +10,10 @@ import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.ContextualProtocolHandler;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.ProtocolHandler;
-import com.aceattorneyonline.master.events.EventErrorReason;
-import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
+import com.aceattorneyonline.master.events.EventErrorReason;
+import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 

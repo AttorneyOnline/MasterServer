@@ -14,7 +14,7 @@ import io.vertx.core.eventbus.Message;
 /**
  * Hooks into a player to receive chat message broadcasts from the event bus.
  */
-public class ChatReceiver implements Handler<Message<String>> {
+public class ChatReceiver implements Handler<Message<byte[]>> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ChatReceiver.class);
 
@@ -28,10 +28,10 @@ public class ChatReceiver implements Handler<Message<String>> {
 	}
 
 	@Override
-	public void handle(Message<String> event) {
+	public void handle(Message<byte[]> event) {
 		PlayerEventProtos.SendChat chatMsg;
 		try {
-			chatMsg = PlayerEventProtos.SendChat.parseFrom(event.body().getBytes());
+			chatMsg = PlayerEventProtos.SendChat.parseFrom(event.body());
 			client.protocolWriter().sendChatMessage(chatMsg.getUsername(), chatMsg.getMessage());
 		} catch (NullPointerException e) {
 			logger.error("Error sending chat broadcast to client", e);

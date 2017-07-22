@@ -1,13 +1,18 @@
 package com.aceattorneyonline.master.verticles;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
+import com.aceattorneyonline.master.UnconnectedClient;
 
 import io.vertx.core.AbstractVerticle;
 
@@ -19,13 +24,15 @@ import io.vertx.core.AbstractVerticle;
  */
 public abstract class ClientListVerticle extends AbstractVerticle {
 
-	private Map<UUID, Client> clientList;
-	private Map<UUID, Player> playerList;
-	private Map<UUID, Advertiser> advertiserList;
+	private static final Logger logger = LoggerFactory.getLogger(ClientListVerticle.class);
 
-	public ClientListVerticle(Map<UUID, Client> clientList) {
-		this.clientList = clientList;
-		// XXX: playerList and advertiserList aren't populated!
+	private static Map<UUID, Client> clientList = new HashMap<>();
+	private static Map<UUID, Player> playerList = new HashMap<>();
+	private static Map<UUID, Advertiser> advertiserList = new HashMap<>();
+	private static Map<UUID, UnconnectedClient> unconnectedList = new HashMap<>();
+
+	public ClientListVerticle() {
+
 	}
 
 	protected Client getClientById(UUID id) {
@@ -38,6 +45,10 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 
 	protected Advertiser getAdvertiserById(UUID id) {
 		return advertiserList.get(id);
+	}
+
+	protected UnconnectedClient getUnconnectedClientById(UUID id) {
+		return unconnectedList.get(id);
 	}
 
 	private void addClient(UUID id, Client client) {
@@ -53,11 +64,13 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		}
 	}
 
-	public void addPlayer(UUID id, Player player) {
+	public void promoteToPlayer(UUID id, Player player) {
+		synchronized (unconnectedList) {
+			unconnectedList.remove(id);
+		}
 		synchronized (playerList) {
 			playerList.put(id, player);
 		}
-		addClient(id, player);
 	}
 
 	public void removePlayer(UUID id, Player player) {
@@ -67,7 +80,10 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		removeClient(id);
 	}
 
-	public void addAdvertiser(UUID id, Advertiser advertiser) {
+	public void promoteToAdvertiser(UUID id, Advertiser advertiser) {
+		synchronized (unconnectedList) {
+			unconnectedList.remove(id);
+		}
 		synchronized (advertiserList) {
 			advertiserList.put(id, advertiser);
 		}
@@ -79,6 +95,45 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 			advertiserList.remove(id);
 		}
 		removeClient(id);
+	}
+
+	public void addUnconnectedClient(UUID id, UnconnectedClient unconnectedClient) {
+		synchronized (unconnectedList) {
+			unconnectedList.put(id, unconnectedClient);
+		}
+		addClient(id, unconnectedClient);
+	}
+
+	public void removeUnconnectedClient(UUID id, UnconnectedClient unconnectedClient) {
+		synchronized (unconnectedList) {
+			unconnectedList.remove(id);
+		}
+		removeClient(id);
+	}
+
+	/**
+	 * Another lazy hack that is called when a client disconnects and we don't know
+	 * what state he's in.
+	 */
+	public void onClientDisconnect(UUID id, Client disconnectedClient) {
+		if (disconnectedClient instanceof UnconnectedClient) {
+			removeUnconnectedClient(id, (UnconnectedClient) disconnectedClient);
+		} else if (disconnectedClient instanceof Player) {
+			removePlayer(id, (Player) disconnectedClient);
+		} else if (disconnectedClient instanceof Advertiser) {
+			removeAdvertiser(id, (Advertiser) disconnectedClient);
+		}
+	}
+
+	public static final class ClientListSingleton extends ClientListVerticle {
+
+	}
+
+	private static final ClientListSingleton singleton = new ClientListSingleton();
+
+	public static ClientListSingleton getSingleton() {
+		logger.debug("Client list singleton retrieved");
+		return singleton;
 	}
 
 	/** Retrieves a list of all connected clients. */
@@ -94,6 +149,11 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 	/** Retrieves a list of all connected advertisers. */
 	public Collection<Advertiser> getAdvertisersList() {
 		return advertiserList.values();
+	}
+
+	/** Retrieves a list of all clients that are not fully connected. */
+	public Collection<UnconnectedClient> getUnconnectedClientsList() {
+		return unconnectedList.values();
 	}
 
 	/** Gets a list of connected players that match a name. */

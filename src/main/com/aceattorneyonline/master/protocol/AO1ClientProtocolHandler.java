@@ -15,6 +15,7 @@ import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
+import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 
 import io.vertx.core.AsyncResult;
@@ -66,8 +67,10 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			// Page of servers: SR#[id]#%
 			// Starts from 0, but returns second server!
 			// But when there are no more pages, there is no response.
-			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(), GetServerListPaged.newBuilder().setId(id)
-					.setPage(Integer.parseInt(tokens.get(1) + 1)).build().toByteArray(), this::handleEventReply);
+			eventBus.send(
+					Events.GET_SERVER_LIST_PAGED.getEventName(), GetServerListPaged.newBuilder().setId(id)
+							.setPage(Integer.parseInt(tokens.get(1) + 1)).build().toByteArray(),
+					this::handleEventReply);
 			break;
 		case "CT":
 			// Chat: CT#[username]#[message]#%
@@ -75,7 +78,9 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 				context().protocolWriter().sendSystemMessage(
 						"You cannot use this as your nickname, as it is reserved for the master server.");
 			} else {
-				eventBus.send(Events.SEND_CHAT.getEventName(), tokens.get(2), this::handleEventReply);
+				eventBus.send(Events.SEND_CHAT.getEventName(), SendChat.newBuilder().setId(id)
+						.setUsername(tokens.get(1)).setMessage(tokens.get(2)).build().toByteArray(),
+						this::handleEventReply);
 			}
 			break;
 		default:

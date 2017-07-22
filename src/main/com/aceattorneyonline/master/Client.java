@@ -24,6 +24,7 @@ public abstract class Client {
 	public Client(Client client) {
 		this.context = client.context;
 		this.id = client.id;
+		this.writer = client.writer;
 	}
 
 	public void setProtocolWriter(ProtocolWriter writer) {

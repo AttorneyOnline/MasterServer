@@ -36,10 +36,6 @@ public class ServerList extends ClientListVerticle {
 	private List<AdvertisedServer> serverListCache = new ArrayList<>();
 	private boolean serverListCacheDirty = false;
 
-	public ServerList(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("Server list verticle starting");
@@ -55,42 +51,48 @@ public class ServerList extends ClientListVerticle {
 		logger.info("Server list verticle stopping");
 	}
 
-	public void handleGetServerList(Message<String> event) {
+	public void handleGetServerList(Message<byte[]> event) {
 		try {
-			GetServerList gsl = GetServerList.parseFrom(event.body().getBytes());
+			GetServerList gsl = GetServerList.parseFrom(event.body());
 			UUID id = UUID.fromString(gsl.getId().getId());
 			Client client = getClientById(id);
+			logger.debug("Handling get server list event from {}", client);
 			client.protocolWriter().sendServerEntries(serverListCache);
+			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerList protobuf");
 		}
 	}
 
-	public void handleGetServerListPaged(Message<String> event) {
+	public void handleGetServerListPaged(Message<byte[]> event) {
 		try {
-			GetServerListPaged gslp = GetServerListPaged.parseFrom(event.body().getBytes());
+			GetServerListPaged gslp = GetServerListPaged.parseFrom(event.body());
 			UUID id = UUID.fromString(gslp.getId().getId());
 			int pageNo = gslp.getPage();
 			AdvertisedServer server = getSortedServerList().get(pageNo);
 			getClientById(id).protocolWriter().sendServerEntry(server);
+			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");
 		} catch (IndexOutOfBoundsException e) {
-			//event.fail(EventErrorReason.INTERNAL_ERROR, "Could not get a list at that page");
+			// event.fail(EventErrorReason.INTERNAL_ERROR, "Could not get a list at that
+			// page");
 			// Actually, the canonical response is nothing.
+			event.reply(null);
 		}
 	}
 
-	public void handleHeartbeat(Message<String> event) {
+	public void handleHeartbeat(Message<byte[]> event) {
 		try {
-			Heartbeat hb = Heartbeat.parseFrom(event.body().getBytes());
+			Heartbeat hb = Heartbeat.parseFrom(event.body());
 			UUID id = UUID.fromString(hb.getId().getId());
 			Advertiser advertiser = getAdvertiserById(id);
 			if (advertiser != null) {
-				AdvertisedServer server = new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(),
-						hb.getVersion());
+				AdvertisedServer server =
+						new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(), hb.getVersion());
 				advertiser.setServer(server);
 				addServer(server);
+				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Client is not an advertiser");
 			}
@@ -99,15 +101,17 @@ public class ServerList extends ClientListVerticle {
 		}
 	}
 
-	public void handlePing(Message<String> event) {
+	public void handlePing(Message<byte[]> event) {
 		try {
-			Ping ping = Ping.parseFrom(event.body().getBytes());
+			Ping ping = Ping.parseFrom(event.body());
 			UUID id = UUID.fromString(ping.getId().getId());
 			Advertiser advertiser = getAdvertiserById(id);
 			if (advertiser != null && advertiser.server() != null) {
 				advertiser.protocolWriter().sendPong();
+				event.reply(null);
 			} else {
 				advertiser.protocolWriter().sendPongError();
+				event.reply(null);
 			}
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse Ping protobuf");

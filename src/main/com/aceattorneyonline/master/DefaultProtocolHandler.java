@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.verticles.ClientListVerticle;
+
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetSocket;
@@ -37,8 +39,11 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 			for (ProtocolHandler handler : handlerList) {
 				switch (handler.isCompatible(buffer)) {
 				case COMPATIBLE:
-					Client client = new UnconnectedClient(socket);
-					socket.handler(handler.registerClient(client));
+					UnconnectedClient client = new UnconnectedClient(socket);
+					ClientListVerticle.getSingleton().addUnconnectedClient(client.id(), client);
+					ProtocolHandler newHandler = handler.registerClient(client);
+					newHandler.handle(buffer);
+					socket.handler(newHandler);
 					logger.debug("Client found compatible with {}", handler);
 					return;
 				case WAIT:

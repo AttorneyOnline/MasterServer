@@ -1,7 +1,6 @@
 package com.aceattorneyonline.master.verticles;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -22,10 +21,6 @@ public class Version extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Version.class);
 
-	public Version(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("Version verticle starting");
@@ -38,9 +33,9 @@ public class Version extends ClientListVerticle {
 		logger.info("Version verticle stopping");
 	}
 
-	public void handleGetVersion(Message<String> event) {
+	public void handleGetVersion(Message<byte[]> event) {
 		try {
-			GetVersion gv = GetVersion.parseFrom(event.body().getBytes());
+			GetVersion gv = GetVersion.parseFrom(event.body());
 			UUID id = UUID.fromString(gv.getId().getId());
 			Client client = getClientById(id);
 			client.protocolWriter().sendVersion(MasterServer.VERSION);

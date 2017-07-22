@@ -1,14 +1,11 @@
 package com.aceattorneyonline.master.verticles;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.ChatCommandSyntax;
-import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.events.AdminEventProtos.ReloadMotd;
 import com.aceattorneyonline.master.events.AdminEventProtos.SetMotd;
 import com.aceattorneyonline.master.events.EventErrorReason;
@@ -25,10 +22,6 @@ public class Motd extends ClientListVerticle {
 	
 	private String motd = "No MOTD set! :(";
 
-	public Motd(Map<UUID, Client> clientList) {
-		super(clientList);
-	}
-
 	@Override
 	public void start() {
 		logger.info("MOTD verticle starting");
@@ -43,7 +36,7 @@ public class Motd extends ClientListVerticle {
 		logger.info("MOTD verticle stopping");
 	}
 
-	public void handleSetMotd(Message<String> event) {
+	public void handleSetMotd(Message<byte[]> event) {
 		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleSetMotd
 	}
 	
@@ -56,7 +49,7 @@ public class Motd extends ClientListVerticle {
 		return SetMotd.newBuilder().setId(invoker).setMessage(message).build();
 	}
 
-	public void handleReloadMotd(Message<String> event) {
+	public void handleReloadMotd(Message<byte[]> event) {
 		event.fail(EventErrorReason.INTERNAL_ERROR, "not implemented"); // FIXME handleReloadMotd
 	}
 	
@@ -65,7 +58,7 @@ public class Motd extends ClientListVerticle {
 		return ReloadMotd.newBuilder().setId(invoker).build();
 	}
 	
-	public void handleGetMotd(Message<String> event) {
+	public void handleGetMotd(Message<byte[]> event) {
 		event.reply(motd);
 	}
 	

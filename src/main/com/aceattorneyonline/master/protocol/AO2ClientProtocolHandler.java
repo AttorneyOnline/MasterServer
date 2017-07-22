@@ -11,6 +11,7 @@ import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.ProtocolHandler;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
+import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 
 import io.vertx.core.buffer.Buffer;
@@ -30,6 +31,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 
 	@Override
 	public void handle(Buffer event) {
+		logger.debug("handling event");
 		String packet = event.toString("UTF-8").trim();
 		packet = packet.substring(0, packet.indexOf('%'));
 		List<String> tokens = Arrays.asList(packet.split("#"));
@@ -49,8 +51,8 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 		case "ALL":
 			// All servers: ALL#%
 			// This is an AO2 thing
-			eventBus.send(Events.GET_SERVER_LIST.getEventName(), GetServerList.newBuilder().setId(id).build().toByteArray(),
-					this::handleEventReply);
+			eventBus.send(Events.GET_SERVER_LIST.getEventName(),
+					GetServerList.newBuilder().setId(id).build().toByteArray(), this::handleEventReply);
 			break;
 		case "CT":
 			// Chat: CT#[username]#[message]#%
@@ -58,7 +60,9 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 				context().protocolWriter().sendSystemMessage(
 						"You cannot use this as your nickname, as it is reserved for the master server.");
 			} else {
-				eventBus.send(Events.SEND_CHAT.getEventName(), tokens.get(2), this::handleEventReply);
+				eventBus.send(Events.SEND_CHAT.getEventName(), SendChat.newBuilder().setId(id)
+						.setUsername(tokens.get(1)).setMessage(tokens.get(2)).build().toByteArray(),
+						this::handleEventReply);
 			}
 			break;
 		default:
