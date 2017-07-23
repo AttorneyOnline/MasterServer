@@ -54,7 +54,10 @@ public class Chat extends ClientListVerticle {
 			String senderName = chat.getUsername();
 			String message = chat.getMessage().trim();
 
-			if (sender == null) {
+			if (message.length() > 1500) {
+				event.fail(EventErrorReason.SECURITY_ERROR,
+						"Your message was too long. Could we tone it down?\nRecovered message:\n" + message);
+			} else if (sender == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
 			} else if (sender.name() == null || sender.name().isEmpty()) {
 				boolean nameChanged = false;

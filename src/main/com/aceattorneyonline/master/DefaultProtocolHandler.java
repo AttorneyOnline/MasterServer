@@ -55,6 +55,10 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 				logger.trace("Registered new client with new protocol handler");
 				newHandler.handle(buffer);
 				socket.handler(newHandler);
+				socket.drainHandler(nil -> {
+					socket.write("Nice job trying to flood");
+					socket.close();
+				});
 				return;
 			case WAIT:
 				wait = true;
