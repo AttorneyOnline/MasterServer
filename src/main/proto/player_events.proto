@@ -43,3 +43,17 @@ message GetChatCommandList {
 message GetChatCommandHelp {
 	string command = 1;
 }
+
+// Flood control handled by SendChat
+message SendPM {
+	Uuid id = 1;
+	string username = 2;
+	string target = 3;
+	string message = 4;
+}
+
+// Flood control handled by SendChat
+message ReplyPM {
+	Uuid id = 1;
+	string message = 2;
+}

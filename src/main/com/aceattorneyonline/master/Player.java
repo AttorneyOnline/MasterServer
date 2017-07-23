@@ -13,7 +13,7 @@ public class Player extends Client {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Player.class);
 	
-	private String name;
+	private String name = "";
 	private boolean admin;
 
 	// This chat receiver is kept here as a strong reference.

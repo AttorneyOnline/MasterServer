@@ -67,8 +67,10 @@ public class BanList extends ClientListVerticle {
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
+				return;
 			} else if (!requestingPlayer.hasAdmin()) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester does not have admin rights.");
+				return;
 			}
 
 			// Try parsing by name first.
@@ -77,7 +79,7 @@ public class BanList extends ClientListVerticle {
 			// difficult to ban in general, as one would have to look up the real IP address
 			// of the attacker.
 			Player target;
-			Collection<Player> targets = searchPlayerByName(targetText);
+			Collection<Player> targets = searchPlayerByNameFuzzy(targetText);
 			int targetsSize = targets.size();
 			if (targetsSize > 1) {
 				event.fail(EventErrorReason.USER_ERROR, "Ambiguous result; please refine your search.");
@@ -145,8 +147,10 @@ public class BanList extends ClientListVerticle {
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
+				return;
 			} else if (!requestingPlayer.hasAdmin()) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester does not have admin rights.");
+				return;
 			}
 
 			// Try parsing by IP address

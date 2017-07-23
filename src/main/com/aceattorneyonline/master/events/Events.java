@@ -11,6 +11,7 @@ import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
 import com.aceattorneyonline.master.verticles.Motd;
+import com.aceattorneyonline.master.verticles.PrivateMessage;
 import com.aceattorneyonline.master.verticles.Version;
 import com.google.protobuf.Message;
 
@@ -59,12 +60,12 @@ public enum Events {
 	ADVERTISER_PING("ms.advertiser.ping"),
 
 	GET_VERSION("ms.version.get", new ChatCommand() {
-		
+
 		@ChatCommandSyntax(name = "version", description = "Gets the master server's version.", arguments = "")
 		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
 			return Version.parseGetVersion(invoker, args);
 		}
-		
+
 	}),
 
 	GET_MOTD("ms.motd.get", new ChatCommand() {
@@ -103,6 +104,20 @@ public enum Events {
 		@ChatCommandSyntax(name = "reloadBans", description = "Reloads the ban list from file.", arguments = "")
 		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
 			return BanList.parseReloadBans(invoker, args);
+		}
+	}),
+
+	PRIVATE_MESSAGE("ms.pm.send", new ChatCommand() {
+		@ChatCommandSyntax(name = "pm", description = "Sends a private message to a player.", arguments = "<target> <message>")
+		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+			return PrivateMessage.parseSendPM(invoker, args);
+		}
+	}),
+	
+	PRIVATE_MESSAGE_REPLY("ms.pm.reply", new ChatCommand() {
+		@ChatCommandSyntax(name = "r", description = "Replies to the last player who sent you a private message.", arguments = "<message>")
+		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+			return PrivateMessage.parseReply(invoker, args);
 		}
 	});
 

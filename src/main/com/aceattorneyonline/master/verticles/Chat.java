@@ -56,6 +56,15 @@ public class Chat extends ClientListVerticle {
 
 			if (sender == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
+			} else if (sender.name() == null || sender.name().isEmpty()) {
+				boolean nameChanged = false;
+				while (!searchPlayerByNameExact(senderName).isEmpty()) {
+					senderName += " - Copy";
+				}
+				if (nameChanged) {
+					event.reply("This name is already taken. Your name has been changed to " + senderName);
+				}
+				sender.setName(senderName);
 			} else if (sender.name() != null && !senderName.equals(sender.name())) {
 				logger.warn("{} tried to send a message with a different name ({})!", sender, senderName);
 				event.fail(EventErrorReason.SECURITY_ERROR, "You cannot send chat messags with a name other than \""
@@ -98,9 +107,6 @@ public class Chat extends ClientListVerticle {
 					event.fail(EventErrorReason.USER_ERROR, "Command not found: " + commandName);
 				}
 			} else {
-				if (sender.name() == null) {
-					sender.setName(senderName);
-				}
 				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
 				event.reply(null);
 				logger.info("{}: {}", senderId.toString(), message);
@@ -120,7 +126,7 @@ public class Chat extends ClientListVerticle {
 		}
 		event.reply(listBuilder.toString());
 	}
-	
+
 	@ChatCommandSyntax(name = "list", description = "Lists all chat commands.", arguments = "")
 	public static com.google.protobuf.Message parseCommandList(Uuid invoker, List<String> args)
 			throws IllegalArgumentException {

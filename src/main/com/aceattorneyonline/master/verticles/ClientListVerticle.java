@@ -123,9 +123,15 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		return advertiserList.values();
 	}
 
-	/** Gets a list of connected players that match a name. */
-	public Collection<Player> searchPlayerByName(String name) {
+	/** Gets a list of connected players that match a case-insensitive search string. */
+	public Collection<Player> searchPlayerByNameFuzzy(String name) {
 		return playerList.values().stream().filter(player -> player.name().toLowerCase().contains(name))
+				.collect(Collectors.toList());
+	}
+	
+	/** Gets a list of connected players that exactly match a case-insensitive search string. */
+	public Collection<Player> searchPlayerByNameExact(String name) {
+		return playerList.values().stream().filter(player -> player.name().equalsIgnoreCase(name))
 				.collect(Collectors.toList());
 	}
 
