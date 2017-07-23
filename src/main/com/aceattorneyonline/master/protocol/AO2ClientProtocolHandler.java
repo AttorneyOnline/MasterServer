@@ -64,7 +64,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 						"You cannot use this as your nickname, as it is reserved for the master server.");
 			} else {
 				eventBus.send(Events.SEND_CHAT.getEventName(), SendChat.newBuilder().setId(id)
-						.setUsername(tokens.get(1)).setMessage(tokens.get(2)).build().toByteArray(),
+						.setUsername(unescape(tokens.get(1))).setMessage(unescape(tokens.get(2))).build().toByteArray(),
 						this::handleEventReply);
 			}
 			break;

@@ -64,7 +64,7 @@ public class Chat extends ClientListVerticle {
 			} else if (message.isEmpty()) {
 				logger.warn("{} tried to send an empty message!", sender);
 				event.reply(null);
-			} else if (message.charAt(0) == '!') {
+			} else if (message.charAt(0) == '!' || message.charAt(0) == '/') {
 				logger.info("{} ran a command: {}", senderId.toString(), message);
 				List<String> tokens = Chat.parseChatCommand(message);
 				logger.debug("Parsed as: {}", tokens);

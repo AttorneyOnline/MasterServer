@@ -16,4 +16,13 @@ public class AO2ProtocolWriter extends AOProtocolWriter {
 		// writer.write(Buffer.buffer("MCT#" + message + "#%"));
 	}
 
+	protected String sanitize(String str) {
+		//@formatter:off
+		return str.replaceAll("%", "<percent>")
+				.replaceAll("#", "<num>")
+				.replaceAll("\\$", "<dollar>")
+				.replaceAll("&", "<and>");
+		//@formatter:on
+	}
+
 }

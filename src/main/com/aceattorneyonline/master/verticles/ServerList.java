@@ -1,12 +1,6 @@
 package com.aceattorneyonline.master.verticles;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,17 +18,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.net.SocketAddress;
 
-public class ServerList extends ClientListVerticle {
+public class ServerList extends ServerListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServerList.class);
-
-	private Comparator<AdvertisedServer> listComparator = (a, b) -> a.uptime().compareTo(b.uptime());
-	private Map<SocketAddress, AdvertisedServer> serverList = new HashMap<>();
-
-	private List<AdvertisedServer> serverListCache = new ArrayList<>();
-	private boolean serverListCacheDirty = false;
 
 	@Override
 	public void start() {
@@ -57,7 +44,7 @@ public class ServerList extends ClientListVerticle {
 			UUID id = UUID.fromString(gsl.getId().getId());
 			Client client = getClientById(id);
 			logger.debug("Handling get server list event from {}", client);
-			client.protocolWriter().sendServerEntries(serverListCache);
+			client.protocolWriter().sendServerEntries(getSortedServerList());
 			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerList protobuf");
@@ -88,9 +75,10 @@ public class ServerList extends ClientListVerticle {
 			UUID id = UUID.fromString(hb.getId().getId());
 			Advertiser advertiser = getAdvertiserById(id);
 			if (advertiser != null) {
-				AdvertisedServer server =
-						new AdvertisedServer(advertiser.address(), hb.getPort(), hb.getName(), hb.getDescription(), hb.getVersion());
+				AdvertisedServer server = new AdvertisedServer(advertiser.address(), hb.getPort(), hb.getName(),
+						hb.getDescription(), hb.getVersion());
 				advertiser.setServer(server);
+				server.setDelistCallback(new DelistCallback(server));
 				addServer(server);
 				event.reply(null);
 			} else {
@@ -118,36 +106,17 @@ public class ServerList extends ClientListVerticle {
 		}
 	}
 
-	/** Caches a sorted version of the server list. */
-	private void cacheServerList() {
-		synchronized (serverListCache) {
-			serverListCache = serverList.values().stream().sorted(listComparator).collect(Collectors.toList());
-		}
-		serverListCacheDirty = false;
-	}
+	public class DelistCallback {
+		private AdvertisedServer server;
 
-	/** Adds or updates an advertised server. */
-	public void addServer(AdvertisedServer server) {
-		synchronized (serverList) {
-			serverList.put(server.address(), server);
+		public DelistCallback(AdvertisedServer server) {
+			this.server = server;
 		}
-		serverListCacheDirty = true;
-	}
 
-	/** Removes an advertised server from the server list. */
-	public void removeServer(AdvertisedServer server) {
-		synchronized (serverList) {
-			serverList.remove(server.address());
+		public void delist() {
+			logger.debug("Delisted {} from server list", server);
+			removeServer(server);
 		}
-		serverListCacheDirty = true;
-	}
-
-	/** Gets a sorted version of the server list from cache. */
-	public List<AdvertisedServer> getSortedServerList() {
-		if (serverListCacheDirty) {
-			cacheServerList();
-		}
-		return serverListCache;
 	}
 
 }

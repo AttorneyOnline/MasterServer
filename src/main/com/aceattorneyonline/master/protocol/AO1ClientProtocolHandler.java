@@ -39,19 +39,19 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 		super(context);
 		// XXX: this might lead to a race condition, so supervise carefully!
 		logger.debug("Sending new player event for {}", context());
-		MasterServer.vertx.eventBus()
-				.<String>send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
+		MasterServer.vertx.eventBus().<String>send(
+				Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
 						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
-						reply -> {
-							if (reply.succeeded()) {
-								ProtocolWriter writer = context.protocolWriter();
-								String resultBody = reply.result().body();
-								writer.sendSystemMessage(resultBody);
-								logger.debug("New player success");
-							} else {
-								logger.error("New player failed: {}", reply.cause());
-							}
-						});
+				reply -> {
+					if (reply.succeeded()) {
+						ProtocolWriter writer = context.protocolWriter();
+						String resultBody = reply.result().body();
+						writer.sendSystemMessage(resultBody);
+						logger.debug("New player success");
+					} else {
+						logger.error("New player failed: {}", reply.cause());
+					}
+				});
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 						"You cannot use this as your nickname, as it is reserved for the master server.");
 			} else {
 				eventBus.send(Events.SEND_CHAT.getEventName(), SendChat.newBuilder().setId(id)
-						.setUsername(tokens.get(1)).setMessage(tokens.get(2)).build().toByteArray(),
+						.setUsername(unescape(tokens.get(1))).setMessage(unescape(tokens.get(2))).build().toByteArray(),
 						this::handleEventReply);
 			}
 			break;
@@ -124,6 +124,21 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 				break;
 			}
 		}
+	}
+
+	protected String unescape(String str) {
+		//@formatter:off
+		return str.replaceAll("<percent>", "%")
+				.replaceAll("<num>", "#")
+				.replaceAll("<dollar>", "\\$")
+				.replaceAll("<and>", "&")
+				.replaceAll("\\$n", "\n")
+				// Unescape doubly escaped symbols
+				.replaceAll("<percent\\>", "<percent>")
+				.replaceAll("<num\\>", "<num>")
+				.replaceAll("<dollar\\>", "<dollar>")
+				.replaceAll("<and\\>", "<and>");
+		//@formatter:on
 	}
 
 	@Override

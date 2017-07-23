@@ -60,14 +60,16 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	@Override
 	public void sendSystemMessage(String message) {
-		writer.write(Buffer.buffer("CT#AOMS#" + message + "#%"));
+		for (String line : message.split("\n")) {
+			writer.write(Buffer.buffer("CT#AOMS#" + sanitize(line) + "#%"));
+		}
 	}
 
 	@Override
 	public void sendChatMessage(String author, String message) {
 		if (author.isEmpty()) {
 			// This method was found in ms.py
-			writer.write(Buffer.buffer("CT#" + message + "\b00##%"));
+			writer.write(Buffer.buffer("CT#" + sanitize(message) + "\b00##%"));
 		} else {
 			writer.write(Buffer.buffer("CT#" + sanitize(author) + "#" + sanitize(message) + "#%"));
 		}
@@ -105,11 +107,13 @@ public class AOProtocolWriter implements ProtocolWriter {
 		writer.write(Buffer.buffer("DOOM#%"));
 	}
 
-	private String sanitize(String str) {
+	protected String sanitize(String str) {
+		//@formatter:off
 		return str.replaceAll("%", "<percent>")
 				.replaceAll("#", "<num>")
 				.replaceAll("\\$", "<dollar>")
 				.replaceAll("&", "<and>");
+		//@formatter:on
 	}
 
 }

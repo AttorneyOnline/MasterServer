@@ -57,8 +57,8 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 			if (tokens.size() >= 4) {
 				String version = tokens.size() >= 5 ? tokens.get(4) : "VANILLA";
 				eventBus.send(Events.ADVERTISER_HEARTBEAT.getEventName(),
-						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(tokens.get(2))
-								.setDescription(tokens.get(3)).setVersion(version).build().toByteArray(),
+						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(unescape(tokens.get(2)))
+								.setDescription(unescape(tokens.get(3))).setVersion(version).build().toByteArray(),
 						reply -> {
 							if (reply.succeeded()) {
 								context().protocolWriter().sendNewHeartbeatSuccess();
@@ -98,12 +98,28 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 		}
 	}
 
+	protected String unescape(String str) {
+		//@formatter:off
+		return str.replaceAll("<percent>", "%")
+				.replaceAll("<num>", "#")
+				.replaceAll("\\$n", "\n")
+				.replaceAll("<dollar>", "$")
+				.replaceAll("<and>", "&")
+				// Unescape doubly escaped symbols
+				.replaceAll("<percent\\>", "<percent>")
+				.replaceAll("<num\\>", "<num>")
+				.replaceAll("<dollar\\>", "<dollar>")
+				.replaceAll("<and\\>", "<and>");
+		//@formatter:on
+	}
+
 	@Override
 	public CompatibilityResult isCompatible(NetSocket socket, Buffer event) {
 		if (event.length() == 0) {
 			// AO1 protocol will always wait on servercheok so we'll send that out.
-			// MEGA HACK: don't send buffer here because we know that AO1ClientProtocolHandler will send it! 
-			//socket.write(Buffer.buffer("servercheok#1.7.5#%"));
+			// MEGA HACK: don't send buffer here because we know that
+			// AO1ClientProtocolHandler will send it!
+			// socket.write(Buffer.buffer("servercheok#1.7.5#%"));
 			return CompatibilityResult.WAIT;
 		} else if (event.toString().startsWith("SCC")) {
 			return CompatibilityResult.COMPATIBLE;

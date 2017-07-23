@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.ChatCommandSyntax;
+import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.events.AdminEventProtos.ReloadMotd;
 import com.aceattorneyonline.master.events.AdminEventProtos.SetMotd;
 import com.aceattorneyonline.master.events.EventErrorReason;
@@ -20,7 +21,7 @@ public class Motd extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Motd.class);
 	
-	private String motd = "No MOTD set! :(";
+	private String motd = "Welcome to Attorney Online! Master Server version: " + MasterServer.VERSION;
 
 	@Override
 	public void start() {

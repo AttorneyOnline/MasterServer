@@ -63,6 +63,9 @@ public class NewClientReceiver extends ClientListVerticle {
 			if (advertiser != null) {
 				advertiser.socket().endHandler(nil -> {
 					logger.info("Dropped {} from client list", advertiser);
+					if (advertiser.server() != null) {
+						advertiser.server().delist();
+					}
 					removeAdvertiser(clientId, advertiser);
 				});
 				event.reply(null);
