@@ -36,7 +36,6 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 
 	public AOServerProtocolHandler(Client context) {
 		super(context);
-		// XXX: this might lead to a race condition, so supervise carefully!
 		MasterServer.vertx.eventBus()
 				.send(Events.NEW_ADVERTISER.getEventName(), NewPlayer.newBuilder()
 						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
@@ -56,7 +55,7 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 			// Server heartbeat: SCC#[port]#[name]#[description]#[server software]#%
 			// This is a server thing
 			if (tokens.size() >= 4) {
-				String version = tokens.size() >= 5 ? tokens.get(4) : "";
+				String version = tokens.size() >= 5 ? tokens.get(4) : "VANILLA";
 				eventBus.send(Events.ADVERTISER_HEARTBEAT.getEventName(),
 						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(tokens.get(2))
 								.setDescription(tokens.get(3)).setVersion(version).build().toByteArray(),

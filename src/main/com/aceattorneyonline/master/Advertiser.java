@@ -3,8 +3,6 @@ package com.aceattorneyonline.master;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.verticles.ServerList;
-
 import io.vertx.core.net.NetSocket;
 
 /**
