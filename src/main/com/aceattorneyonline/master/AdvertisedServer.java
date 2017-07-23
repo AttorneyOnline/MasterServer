@@ -8,13 +8,15 @@ import io.vertx.core.net.SocketAddress;
 /** Represents a server being advertised, perhaps by an advertiser. */
 public class AdvertisedServer {
 	private final SocketAddress address;
+	private final int port;
 	private final String name;
 	private final String description;
 	private final String version;
 	private final Instant timeAdded;
 
-	public AdvertisedServer(SocketAddress address, String name, String description, String version) {
+	public AdvertisedServer(SocketAddress address, int port, String name, String description, String version) {
 		this.address = address;
+		this.port = port;
 		this.name = name;
 		this.description = description;
 		this.version = version;
@@ -23,6 +25,10 @@ public class AdvertisedServer {
 
 	public SocketAddress address() {
 		return address;
+	}
+	
+	public int port() {
+		return port;
 	}
 
 	public String name() {
@@ -42,7 +48,7 @@ public class AdvertisedServer {
 	}
 
 	public String toString() {
-		return String.format("Server (%8s) - %30s", version(), name());
+		return String.format("Server (%8s) - %30s - %s:%d", version(), name(), address().host(), port());
 	}
 
 }

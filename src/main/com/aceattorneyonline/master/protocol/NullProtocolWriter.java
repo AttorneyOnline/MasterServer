@@ -13,7 +13,7 @@ public class NullProtocolWriter implements ProtocolWriter {
 	private static final Logger logger = LoggerFactory.getLogger(NullProtocolWriter.class);
 
 	@Override
-	public void sendServerEntry(AdvertisedServer advertiser) {
+	public void sendServerEntry(int number, AdvertisedServer advertiser) {
 		logger.debug("Tried to send server entry to null protocol writer");
 	}
 

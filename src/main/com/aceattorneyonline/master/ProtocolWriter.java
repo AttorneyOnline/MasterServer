@@ -13,7 +13,7 @@ import java.util.Collection;
 public interface ProtocolWriter {
 
 	/** Sends a single server entry being advertised. */
-	public void sendServerEntry(AdvertisedServer advertiser);
+	public void sendServerEntry(int number, AdvertisedServer advertiser);
 
 	/** Sends multiple server entries being advertised. */
 	public void sendServerEntries(Collection<AdvertisedServer> serverList);

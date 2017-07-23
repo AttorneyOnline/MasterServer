@@ -1,11 +1,19 @@
 package com.aceattorneyonline.master;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.aceattorneyonline.master.verticles.ServerList;
+
 import io.vertx.core.net.NetSocket;
 
 /**
  * Represents a server that is being advertised on the master server.
  */
 public class Advertiser extends Client {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Advertiser.class);
+	
 	private AdvertisedServer server;
 	
 	public Advertiser(NetSocket socket) {
@@ -18,6 +26,7 @@ public class Advertiser extends Client {
 	}
 
 	public void setServer(AdvertisedServer server) {
+		logger.info("Advertising server: {}", server);
 		this.server = server;
 	}
 

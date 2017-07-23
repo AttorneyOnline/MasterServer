@@ -70,7 +70,7 @@ public class ServerList extends ClientListVerticle {
 			UUID id = UUID.fromString(gslp.getId().getId());
 			int pageNo = gslp.getPage();
 			AdvertisedServer server = getSortedServerList().get(pageNo);
-			getClientById(id).protocolWriter().sendServerEntry(server);
+			getClientById(id).protocolWriter().sendServerEntry(pageNo, server);
 			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");
@@ -89,7 +89,7 @@ public class ServerList extends ClientListVerticle {
 			Advertiser advertiser = getAdvertiserById(id);
 			if (advertiser != null) {
 				AdvertisedServer server =
-						new AdvertisedServer(advertiser.address(), hb.getName(), hb.getDescription(), hb.getVersion());
+						new AdvertisedServer(advertiser.address(), hb.getPort(), hb.getName(), hb.getDescription(), hb.getVersion());
 				advertiser.setServer(server);
 				addServer(server);
 				event.reply(null);
