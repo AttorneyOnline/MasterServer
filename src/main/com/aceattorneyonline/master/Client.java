@@ -2,32 +2,41 @@ package com.aceattorneyonline.master;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.aceattorneyonline.master.protocol.NullProtocolWriter;
+
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 
-/**
- * Represents any user currently connected to the master server.
- * 
- * <p>
- * Client cannot be instantiated in raw form, so no dirty tricks.
- */
+/** Represents any user currently connected to the master server. */
 public abstract class Client {
-	private final NetSocket context;
+	
+	private static final Logger logger = LoggerFactory.getLogger(Client.class);
+	
+	private final NetSocket socket;
 	private final UUID id;
 	private ProtocolWriter writer;
+	
+	public Client(NetSocket socket) {
+		this(socket, UUID.randomUUID());
+		setProtocolWriter(new NullProtocolWriter());
+	} 
 
 	public Client(NetSocket context, UUID id) {
-		this.context = context;
+		this.socket = context;
 		this.id = id;
 	}
-
+	
 	public Client(Client client) {
-		this.context = client.context;
+		this.socket = client.socket;
 		this.id = client.id;
 		this.writer = client.writer;
 	}
 
 	public void setProtocolWriter(ProtocolWriter writer) {
+		logger.debug("Set protocol writer of {} to {}", this, writer.getClass().getSimpleName());
 		this.writer = writer;
 	}
 
@@ -40,8 +49,8 @@ public abstract class Client {
 	}
 
 	/** Returns the network socket of this client. */
-	public NetSocket context() {
-		return context;
+	public NetSocket socket() {
+		return socket;
 	}
 
 	/** Returns an ephemeral ID representing the session. */
@@ -50,7 +59,7 @@ public abstract class Client {
 	}
 
 	public SocketAddress address() {
-		return context.remoteAddress();
+		return socket.remoteAddress();
 	}
 
 	public String toString() {

@@ -77,7 +77,8 @@ public class MasterServer {
 		// @formatter:off
 		NetServerOptions options = new NetServerOptions()
 			.setPort(HOST_PORT)
-			.setIdleTimeout(10);
+			.setTcpKeepAlive(true)
+			.setTcpNoDelay(true);
 		vertx.createNetServer(options)
 			.connectHandler(defaultHandler)
 			.listen(result -> {

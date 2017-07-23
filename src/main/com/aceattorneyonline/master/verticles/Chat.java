@@ -1,5 +1,6 @@
 package com.aceattorneyonline.master.verticles;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +24,13 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.ReplyException;
 
 public class Chat extends ClientListVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Chat.class);
 
-	private final Map<String, Events> commands = Events.getAllChatCommands();
+	private static final Map<String, Events> commands = Events.getAllChatCommands();
 
 	@Override
 	public void start() {
@@ -66,15 +68,27 @@ public class Chat extends ClientListVerticle {
 			} else if (message.charAt(0) == '!') {
 				logger.info("{} ran a command: {}", senderId.toString(), message);
 				List<String> tokens = Chat.parseChatCommand(message);
+				logger.debug("Parsed as: {}", tokens);
 				// Remove the command token and strip the prefix.
-				Events commandEvent = commands.get(tokens.remove(0).substring(1));
+				String commandName = tokens.remove(0).substring(1);
+				logger.debug(commandName);
+				Events commandEvent = commands.get(commandName);
 				if (commandEvent != null) {
 					ChatCommand command = commandEvent.getChatCommand();
 					try {
 						com.google.protobuf.Message msg = command.serializeCommand(senderProtoId, tokens);
-						// Pass the reply directly to the chat command sender, success or fail.
-						// It's not our responsibility anymore.
-						getVertx().eventBus().send(commandEvent.getEventName(), msg.toByteArray(), event::reply);
+						getVertx().eventBus().send(commandEvent.getEventName(), msg.toByteArray(), reply -> {
+							if (reply.succeeded()) {
+								event.reply(reply.result().body());
+							} else {
+								if (reply.cause() instanceof ReplyException) {
+									ReplyException e = (ReplyException) reply.cause();
+									event.fail(e.failureCode(), e.getMessage());
+								} else {
+									event.fail(EventErrorReason.INTERNAL_ERROR, reply.cause().getMessage());
+								}
+							}
+						});
 					} catch (IllegalArgumentException e) {
 						ChatCommandSyntax syntax = command.getSyntax();
 						event.fail(EventErrorReason.USER_ERROR,
@@ -82,7 +96,7 @@ public class Chat extends ClientListVerticle {
 					}
 				} else {
 					logger.info("Parsed command was not found in commands list");
-					event.fail(EventErrorReason.USER_ERROR, "Command not found.");
+					event.fail(EventErrorReason.USER_ERROR, "Command not found: " + commandName);
 				}
 			} else {
 				if (sender.name() == null) {
@@ -107,7 +121,7 @@ public class Chat extends ClientListVerticle {
 		}
 		event.reply(listBuilder.toString());
 	}
-
+	
 	@ChatCommandSyntax(name = "list", description = "Lists all chat commands.", arguments = "")
 	public static com.google.protobuf.Message parseCommandList(Uuid invoker, List<String> args)
 			throws IllegalArgumentException {
@@ -117,6 +131,10 @@ public class Chat extends ClientListVerticle {
 	public void handleCommandHelp(Message<byte[]> event) {
 		try {
 			GetChatCommandHelp help = GetChatCommandHelp.parseFrom(event.body());
+			if (help.getCommand().isEmpty()) {
+				handleCommandList(event);
+				return;
+			}
 			Events commandEvent = commands.get(help.getCommand());
 			if (commandEvent != null) {
 				ChatCommandSyntax syntax = commandEvent.getChatCommand().getSyntax();
@@ -165,6 +183,11 @@ public class Chat extends ClientListVerticle {
 
 		// Trim the chat command itself out
 		int cmdEnd = message.indexOf(' ');
+		if (cmdEnd == -1) {
+			tokens.add(message);
+			return tokens; // We know there can be no other arguments
+		}
+
 		tokens.add(message.substring(0, cmdEnd));
 		message = message.substring(cmdEnd + 1).trim(); // Trim again as there might be multiple separating spaces
 

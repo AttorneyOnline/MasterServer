@@ -2,6 +2,9 @@ package com.aceattorneyonline.master.protocol;
 
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.aceattorneyonline.master.AdvertisedServer;
 import com.aceattorneyonline.master.ProtocolWriter;
 
@@ -9,11 +12,14 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 
 public class AOProtocolWriter implements ProtocolWriter {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AOProtocolWriter.class);
 
 	protected final WriteStream<Buffer> writer;
 
 	public AOProtocolWriter(WriteStream<Buffer> writer) {
 		this.writer = writer;
+		logger.debug("Instantiated AOProtocolWriter");
 	}
 
 	@Override
@@ -83,6 +89,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	@Override
 	public void sendNewHeartbeatSuccess() {
+		logger.debug("Sent new heartbeat success");
 		writer.write(Buffer.buffer("PSDD#0#%"));
 	}
 	

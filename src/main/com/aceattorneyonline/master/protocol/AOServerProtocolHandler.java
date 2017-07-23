@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.ContextualProtocolHandler;
 import com.aceattorneyonline.master.MasterServer;
@@ -16,12 +17,14 @@ import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
+import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.net.NetSocket;
 
 public class AOServerProtocolHandler extends ContextualProtocolHandler {
 
@@ -52,16 +55,17 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 		case "SCC":
 			// Server heartbeat: SCC#[port]#[name]#[description]#[server software]#%
 			// This is a server thing
-			if (tokens.size() == 6) {
+			if (tokens.size() >= 4) {
+				String version = tokens.size() >= 5 ? tokens.get(4) : "";
 				eventBus.send(Events.ADVERTISER_HEARTBEAT.getEventName(),
 						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(tokens.get(2))
-								.setDescription(tokens.get(3)).setVersion(tokens.get(4)).build().toByteArray(),
+								.setDescription(tokens.get(3)).setVersion(version).build().toByteArray(),
 						reply -> {
 							if (reply.succeeded()) {
 								context().protocolWriter().sendNewHeartbeatSuccess();
 							} else {
 								logger.warn("Advertiser dropped due to heartbeat event failure");
-								context().context().close();
+								context().socket().close();
 							}
 						});
 			}
@@ -91,15 +95,16 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 				logger.info("User error from {}: {}", message);
 				break;
 			}
-			context().context().close();
+			context().socket().close();
 		}
 	}
 
 	@Override
-	public CompatibilityResult isCompatible(Buffer event) {
+	public CompatibilityResult isCompatible(NetSocket socket, Buffer event) {
 		if (event.length() == 0) {
 			// AO1 protocol will always wait on servercheok so we'll send that out.
-			context().context().write(Buffer.buffer("servercheok#1.7.5#%"));
+			// MEGA HACK: don't send buffer here because we know that AO1ClientProtocolHandler will send it! 
+			//socket.write(Buffer.buffer("servercheok#1.7.5#%"));
 			return CompatibilityResult.WAIT;
 		} else if (event.toString().startsWith("SCC")) {
 			return CompatibilityResult.COMPATIBLE;
@@ -108,9 +113,11 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 	}
 
 	@Override
-	public ProtocolHandler registerClient(Client client) {
-		client.setProtocolWriter(new AOProtocolWriter(client.context()));
-		return new AOServerProtocolHandler(client);
+	public ProtocolHandler registerClient(NetSocket socket) {
+		Advertiser advertiser = new Advertiser(socket);
+		ClientListVerticle.getSingleton().addAdvertiser(advertiser.id(), advertiser);
+		advertiser.setProtocolWriter(new AOProtocolWriter(advertiser.socket()));
+		return new AOServerProtocolHandler(advertiser);
 	}
 
 }

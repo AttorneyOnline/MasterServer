@@ -6,8 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
-
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetSocket;
@@ -33,34 +31,45 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 	/** Handles a new connection with a compatible protocol. */
 	@Override
 	public void handle(NetSocket socket) {
-		socket.handler(buffer -> {
-			logger.info("Handling socket {}", socket.remoteAddress());
-			boolean wait = false;
-			for (ProtocolHandler handler : handlerList) {
-				switch (handler.isCompatible(buffer)) {
-				case COMPATIBLE:
-					UnconnectedClient client = new UnconnectedClient(socket);
-					ClientListVerticle.getSingleton().addUnconnectedClient(client.id(), client);
-					ProtocolHandler newHandler = handler.registerClient(client);
-					newHandler.handle(buffer);
-					socket.handler(newHandler);
-					logger.debug("Client found compatible with {}", handler);
-					return;
-				case WAIT:
-					wait = true;
-					logger.debug("Will wait on {}", handler);
-					break;
-				default:
-				case FAIL:
-					logger.trace("Failed compatibility check with {}", handler);
-					break;
-				}
-			}
-			if (!wait) {
-				logger.warn("Client {} was disconnected due to invalid protocol", socket.remoteAddress());
-				socket.end(Buffer.buffer("Invalid protocol"));
-			}
+		long timer = MasterServer.vertx.setTimer(750, id -> {
+			// If nothing received within 750 ms, take the initiative and start looking for
+			// compatible handlers. For instance, AO1 doesn't take an initial packet from
+			// the client.
+			handle(socket, Buffer.buffer());
 		});
+		socket.handler(buffer -> {
+			// Packet received. Cancel the timer.
+			MasterServer.vertx.cancelTimer(timer);
+			handle(socket, buffer);
+		});
+	}
+
+	public void handle(NetSocket socket, Buffer buffer) {
+		logger.info("Handling socket {}", socket.remoteAddress());
+		boolean wait = false;
+		for (ProtocolHandler handler : handlerList) {
+			switch (handler.isCompatible(socket, buffer)) {
+			case COMPATIBLE:
+				logger.debug("Client found compatible with {}", handler);
+				ProtocolHandler newHandler = handler.registerClient(socket);
+				logger.trace("Registered new client with new protocol handler");
+				newHandler.handle(buffer);
+				socket.handler(newHandler);
+				return;
+			case WAIT:
+				wait = true;
+				logger.debug("Will wait on {}", handler);
+				break;
+			default:
+			case FAIL:
+				logger.trace("Failed compatibility check with {}", handler);
+				break;
+			}
+		}
+		if (!wait) {
+			logger.warn("Client {} was disconnected due to invalid protocol: {}", socket.remoteAddress(), buffer.toString());
+			socket.end(Buffer.buffer("Invalid protocol"));
+		}
 	}
 
 }

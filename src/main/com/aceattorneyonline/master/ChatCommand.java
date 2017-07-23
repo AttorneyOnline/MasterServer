@@ -1,6 +1,7 @@
 package com.aceattorneyonline.master;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 import com.aceattorneyonline.master.events.Events;
@@ -30,11 +31,16 @@ public interface ChatCommand {
 	 */
 	public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException;
 
-	/** Gets the syntax of the chat command itself. */
+	/**
+	 * Gets the syntax of the chat command itself. This doesn't work if the method
+	 * is thrown in a method reference because it's just syntactic sugar for a
+	 * lambda, and the lambda doesn't copy any of the annotations.
+	 */
 	public default ChatCommandSyntax getSyntax() {
 		try {
 			Method serializeMethod = getClass().getMethod("serializeCommand", Uuid.class, List.class);
-			return serializeMethod.getAnnotation(ChatCommandSyntax.class);
+			ChatCommandSyntax syntax = serializeMethod.getAnnotation(ChatCommandSyntax.class);
+			return syntax;
 		} catch (NoSuchMethodException | SecurityException e) {
 			return null;
 		}

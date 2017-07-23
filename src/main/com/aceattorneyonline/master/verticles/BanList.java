@@ -85,7 +85,7 @@ public class BanList extends ClientListVerticle {
 				target = targets.iterator().next(); // Seems to be better than using a Stream and an Optional...
 				target.protocolWriter().sendSystemMessage("You have been banned. Reason: " + ban.getReason());
 				banPlayer(new Ban(target.address().host(), target.name(), ban.getReason()));
-				target.context().end();
+				target.socket().end();
 				event.reply("Successfully banned " + target.toString() + " (" + target.address().host() + ")");
 			} else {
 				// No targets found by name...
@@ -104,7 +104,7 @@ public class BanList extends ClientListVerticle {
 						}
 						matchingClient.protocolWriter()
 								.sendBanNotification("You have been banned. Reason: " + ban.getReason());
-						matchingClient.context().end();
+						matchingClient.socket().end();
 					}
 					banPlayer(new Ban(addressString, banName, ban.getReason()));
 					event.reply("Successfully banned " + addressString);

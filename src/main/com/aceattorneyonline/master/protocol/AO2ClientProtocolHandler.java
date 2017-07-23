@@ -8,14 +8,17 @@ import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.MasterServer;
+import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.ProtocolHandler;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
+import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.net.NetSocket;
 
 public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 
@@ -31,7 +34,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 
 	@Override
 	public void handle(Buffer event) {
-		logger.debug("handling event");
+		logger.debug("Handling incoming packet");
 		String packet = event.toString("UTF-8").trim();
 		packet = packet.substring(0, packet.indexOf('%'));
 		List<String> tokens = Arrays.asList(packet.split("#"));
@@ -72,7 +75,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 	}
 
 	@Override
-	public CompatibilityResult isCompatible(Buffer event) {
+	public CompatibilityResult isCompatible(NetSocket socket, Buffer event) {
 		if (event.toString().equals("ALL#%")) {
 			return CompatibilityResult.COMPATIBLE;
 		}
@@ -80,9 +83,11 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 	}
 
 	@Override
-	public ProtocolHandler registerClient(Client client) {
-		client.setProtocolWriter(new AO2ProtocolWriter(client.context()));
-		return new AO2ClientProtocolHandler(client);
+	public ProtocolHandler registerClient(NetSocket socket) {
+		Player player = new Player(socket);
+		ClientListVerticle.getSingleton().addPlayer(player.id(), player);
+		player.setProtocolWriter(new AO2ProtocolWriter(player.socket()));
+		return new AO2ClientProtocolHandler(player);
 	}
 
 }

@@ -3,6 +3,7 @@ package com.aceattorneyonline.master;
 import com.aceattorneyonline.master.protocol.CompatibilityResult;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.NetSocket;
 
 public abstract class ContextualProtocolHandler implements ProtocolHandler {
 
@@ -21,6 +22,10 @@ public abstract class ContextualProtocolHandler implements ProtocolHandler {
 	public Client context() {
 		return context;
 	}
+	
+	public void setContext(Client context) {
+		this.context = context;
+	}
 
 	@Override
 	public abstract void handle(Buffer event);
@@ -30,10 +35,10 @@ public abstract class ContextualProtocolHandler implements ProtocolHandler {
 	 * protocol.
 	 */
 	@Override
-	public abstract CompatibilityResult isCompatible(Buffer event);
+	public abstract CompatibilityResult isCompatible(NetSocket socket, Buffer event);
 
 	/** Returns a new instance of this protocol handler, with a context attached. */
 	@Override
-	public abstract ProtocolHandler registerClient(Client client);
+	public abstract ProtocolHandler registerClient(NetSocket socket);
 
 }

@@ -27,8 +27,9 @@ public class Motd extends ClientListVerticle {
 		logger.info("MOTD verticle starting");
 
 		EventBus eventBus = getVertx().eventBus();
-		eventBus.consumer(Events.SET_MOTD.toString(), this::handleSetMotd);
-		eventBus.consumer(Events.RELOAD_MOTD.toString(), this::handleReloadMotd);
+		eventBus.consumer(Events.GET_MOTD.getEventName(), this::handleGetMotd);
+		eventBus.consumer(Events.SET_MOTD.getEventName(), this::handleSetMotd);
+		eventBus.consumer(Events.RELOAD_MOTD.getEventName(), this::handleReloadMotd);
 	}
 
 	@Override

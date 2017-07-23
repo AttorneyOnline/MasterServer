@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
-import com.aceattorneyonline.master.UnconnectedClient;
-
 import io.vertx.core.AbstractVerticle;
 
 /**
@@ -29,7 +27,6 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 	private static Map<UUID, Client> clientList = new HashMap<>();
 	private static Map<UUID, Player> playerList = new HashMap<>();
 	private static Map<UUID, Advertiser> advertiserList = new HashMap<>();
-	private static Map<UUID, UnconnectedClient> unconnectedList = new HashMap<>();
 
 	public ClientListVerticle() {
 
@@ -47,12 +44,7 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		return advertiserList.get(id);
 	}
 
-	protected UnconnectedClient getUnconnectedClientById(UUID id) {
-		return unconnectedList.get(id);
-	}
-
 	private void addClient(UUID id, Client client) {
-		// TODO: determine performance/necessity of synchronized
 		synchronized (clientList) {
 			clientList.put(id, client);
 		}
@@ -64,13 +56,11 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		}
 	}
 
-	public void promoteToPlayer(UUID id, Player player) {
-		synchronized (unconnectedList) {
-			unconnectedList.remove(id);
-		}
+	public void addPlayer(UUID id, Player player) {
 		synchronized (playerList) {
 			playerList.put(id, player);
 		}
+		addClient(id, player);
 	}
 
 	public void removePlayer(UUID id, Player player) {
@@ -80,10 +70,7 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		removeClient(id);
 	}
 
-	public void promoteToAdvertiser(UUID id, Advertiser advertiser) {
-		synchronized (unconnectedList) {
-			unconnectedList.remove(id);
-		}
+	public void addAdvertiser(UUID id, Advertiser advertiser) {
 		synchronized (advertiserList) {
 			advertiserList.put(id, advertiser);
 		}
@@ -97,28 +84,12 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 		removeClient(id);
 	}
 
-	public void addUnconnectedClient(UUID id, UnconnectedClient unconnectedClient) {
-		synchronized (unconnectedList) {
-			unconnectedList.put(id, unconnectedClient);
-		}
-		addClient(id, unconnectedClient);
-	}
-
-	public void removeUnconnectedClient(UUID id, UnconnectedClient unconnectedClient) {
-		synchronized (unconnectedList) {
-			unconnectedList.remove(id);
-		}
-		removeClient(id);
-	}
-
 	/**
 	 * Another lazy hack that is called when a client disconnects and we don't know
 	 * what state he's in.
 	 */
 	public void onClientDisconnect(UUID id, Client disconnectedClient) {
-		if (disconnectedClient instanceof UnconnectedClient) {
-			removeUnconnectedClient(id, (UnconnectedClient) disconnectedClient);
-		} else if (disconnectedClient instanceof Player) {
+		if (disconnectedClient instanceof Player) {
 			removePlayer(id, (Player) disconnectedClient);
 		} else if (disconnectedClient instanceof Advertiser) {
 			removeAdvertiser(id, (Advertiser) disconnectedClient);
@@ -149,11 +120,6 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 	/** Retrieves a list of all connected advertisers. */
 	public Collection<Advertiser> getAdvertisersList() {
 		return advertiserList.values();
-	}
-
-	/** Retrieves a list of all clients that are not fully connected. */
-	public Collection<UnconnectedClient> getUnconnectedClientsList() {
-		return unconnectedList.values();
 	}
 
 	/** Gets a list of connected players that match a name. */

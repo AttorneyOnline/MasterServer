@@ -9,20 +9,23 @@ import org.slf4j.LoggerFactory;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.ContextualProtocolHandler;
 import com.aceattorneyonline.master.MasterServer;
+import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.ProtocolHandler;
-import com.aceattorneyonline.master.UnconnectedClient;
+import com.aceattorneyonline.master.ProtocolWriter;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
+import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.net.NetSocket;
 
 public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 
@@ -35,16 +38,30 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 	public AO1ClientProtocolHandler(Client context) {
 		super(context);
 		// XXX: this might lead to a race condition, so supervise carefully!
+		logger.debug("Sending new player event for {}", context());
 		MasterServer.vertx.eventBus()
-				.send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
+				.<String>send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
 						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
-						this::handleEventReply);
+						reply -> {
+							if (reply.succeeded()) {
+								ProtocolWriter writer = context.protocolWriter();
+								String resultBody = reply.result().body();
+								writer.sendSystemMessage(resultBody);
+								logger.debug("New player success");
+							} else {
+								logger.error("New player failed: {}", reply.cause());
+							}
+						});
 	}
 
 	@Override
 	public void handle(Buffer event) {
 		String packet = event.toString("Windows-1251").trim();
-		packet = packet.substring(0, packet.indexOf('%'));
+		try {
+			packet = packet.substring(0, packet.indexOf('%'));
+		} catch (StringIndexOutOfBoundsException e) {
+			logger.error("Packet without % delimiter! {}", packet);
+		}
 		List<String> tokens = Arrays.asList(packet.split("#"));
 		EventBus eventBus = MasterServer.vertx.eventBus();
 		Uuid id = Uuid.newBuilder().setId(context().id().toString()).build();
@@ -54,12 +71,6 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			// All servers (paged): askforservers#% (returns first server on the list)
 			// But we can hack it and return all servers, and then not accept any SR
 			// requests.
-
-			// HACK: this check might not be needed after all
-			if (context() instanceof UnconnectedClient && ((UnconnectedClient) context()).getSuccessor() == null) {
-				eventBus.send(Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder().setId(id).build().toByteArray(),
-						this::handleEventReply);
-			}
 			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(),
 					GetServerListPaged.newBuilder().setId(id).setPage(0).build().toByteArray(), this::handleEventReply);
 			break;
@@ -116,10 +127,10 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 	}
 
 	@Override
-	public CompatibilityResult isCompatible(Buffer event) {
+	public CompatibilityResult isCompatible(NetSocket socket, Buffer event) {
 		if (event.length() == 0) {
 			// AO1 protocol will always wait on servercheok so we'll send that out.
-			context().context().write(Buffer.buffer("servercheok#1.7.5#%"));
+			socket.write(Buffer.buffer("servercheok#1.7.5#%"));
 			return CompatibilityResult.WAIT;
 		} else if (event.toString().equals("askforservers#%")) {
 			return CompatibilityResult.COMPATIBLE;
@@ -128,9 +139,11 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 	}
 
 	@Override
-	public ProtocolHandler registerClient(Client client) {
-		client.setProtocolWriter(new AOProtocolWriter(client.context()));
-		return new AO1ClientProtocolHandler(client);
+	public ProtocolHandler registerClient(NetSocket socket) {
+		Player player = new Player(socket);
+		ClientListVerticle.getSingleton().addPlayer(player.id(), player);
+		player.setProtocolWriter(new AOProtocolWriter(player.socket()));
+		return new AO1ClientProtocolHandler(player);
 	}
 
 }

@@ -4,6 +4,7 @@ import com.aceattorneyonline.master.protocol.CompatibilityResult;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.NetSocket;
 
 public interface ProtocolHandler extends Handler<Buffer> {
 	
@@ -14,7 +15,7 @@ public interface ProtocolHandler extends Handler<Buffer> {
 	 * @param event  the first packet received from the socket
 	 * @return whether or not the handshake was successful
 	 */
-	public abstract CompatibilityResult isCompatible(Buffer event);
+	public abstract CompatibilityResult isCompatible(NetSocket socket, Buffer event);
 
 	/**
 	 * Creates a new protocol handler, but with a socket actually attached to it
@@ -22,6 +23,6 @@ public interface ProtocolHandler extends Handler<Buffer> {
 	 * @param client  the new client
 	 * @return new instance of ProtocolHandler of identical type
 	 */
-	public ProtocolHandler registerClient(Client client);
+	public ProtocolHandler registerClient(NetSocket socket);
 
 }

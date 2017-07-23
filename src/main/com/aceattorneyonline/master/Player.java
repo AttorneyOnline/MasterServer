@@ -3,6 +3,8 @@ package com.aceattorneyonline.master;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.net.NetSocket;
+
 /**
  * Represents a player (non-server) that is currently connected to the master
  * server.
@@ -17,10 +19,9 @@ public class Player extends Client {
 	// This chat receiver is kept here as a strong reference.
 	@SuppressWarnings("unused")
 	private final ChatReceiver chatReceiver;
-
-	/** Instantiates a connected player based from an unconnected client. */
-	public Player(UnconnectedClient client) {
-		super(client);
+	
+	public Player(NetSocket socket)  {
+		super(socket);
 		chatReceiver = new ChatReceiver(this);
 	}
 	
@@ -39,7 +40,7 @@ public class Player extends Client {
 
 	public String toString() {
 		String name = name();
-		if (name.isEmpty()) {
+		if (name == null || name.isEmpty()) {
 			name = "(unnamed)";
 		}
 		return String.format("%s - Player %3s %12s", id(), admin ? "(a)" : "", name);

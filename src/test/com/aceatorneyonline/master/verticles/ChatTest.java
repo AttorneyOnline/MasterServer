@@ -1,12 +1,17 @@
 package com.aceatorneyonline.master.verticles;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.verticles.Chat;
 
 public class ChatTest {
@@ -49,6 +54,23 @@ public class ChatTest {
 		String[] expected = new String[] {"!motd", "Does this work well?", "or", "not?"};
 		List<String> actual = Chat.parseChatCommand(command);
 		assertEquals(Arrays.asList(expected), actual);
+	}
+	
+	@Test
+	public void testRetrieveAllChatCommands() {
+		//System.out.println(Arrays.stream(Events.values()).filter(e -> e.getChatCommand() != null).collect(Collectors.toMap(e -> e.getChatCommand().getSyntax(), e -> e.getChatCommand())));
+		/*
+		Map<String, Events> cmds = new HashMap<>();
+		for (Events event : Events.values()) {
+			if (event.getChatCommand() != null) {
+				//System.out.println(event.getChatCommand().getSyntax());
+				if (event.getChatCommand().getSyntax() != null)
+					cmds.put(event.getChatCommand().getSyntax().name(), event);
+			}
+		}
+		System.out.println(cmds);
+		*/
+		assertFalse(Events.getAllChatCommands().size() == 0);
 	}
 
 }

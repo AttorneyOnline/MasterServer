@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Player;
-import com.aceattorneyonline.master.UnconnectedClient;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
@@ -39,19 +38,17 @@ public class NewClientReceiver extends ClientListVerticle {
 		try {
 			NewPlayer newPlayer = NewPlayer.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newPlayer.getId().getId());
-			if (getPlayerById(clientId) == null) {
-				UnconnectedClient oldClient = getUnconnectedClientById(clientId);
-				Player player = new Player(oldClient);
-				player.context().endHandler(nil -> {
+			Player player = getPlayerById(clientId);
+			if (player != null) {
+				player.socket().endHandler(nil -> {
+					logger.info("Dropped {} from client list", player);
 					removePlayer(clientId, player);
 				});
-				oldClient.setSuccessor(player);
-				promoteToPlayer(clientId, player);
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
-					event.reply(reply.result());
+					event.reply(reply.result().body());
 				});
 			} else {
-				event.fail(EventErrorReason.SECURITY_ERROR, "Player already exists");
+				event.fail(EventErrorReason.INTERNAL_ERROR, "Player does not exist on player table");
 			}
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse NewPlayer protobuf");
@@ -62,17 +59,15 @@ public class NewClientReceiver extends ClientListVerticle {
 		try {
 			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newAdvertiser.getId().getId());
-			if (getAdvertiserById(clientId) == null) {
-				UnconnectedClient oldClient = (UnconnectedClient) getClientById(clientId);
-				Advertiser advertiser = new Advertiser(oldClient);
-				advertiser.context().endHandler(nil -> {
+			Advertiser advertiser = getAdvertiserById(clientId);
+			if (advertiser != null) {
+				advertiser.socket().endHandler(nil -> {
+					logger.info("Dropped {} from client list", advertiser);
 					removeAdvertiser(clientId, advertiser);
 				});
-				oldClient.setSuccessor(advertiser);
-				promoteToAdvertiser(clientId, advertiser);
 				event.reply(null);
 			} else {
-				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser already exists");
+				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser does not exist on advertiser table");
 			}
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse NewAdvertiser protobuf");
