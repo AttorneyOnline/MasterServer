@@ -60,6 +60,10 @@ public class Chat extends ClientListVerticle {
 			} else if (sender == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
 			} else if (sender.name() == null || sender.name().isEmpty()) {
+				if (senderName == null || senderName.isEmpty()) {
+					event.fail(EventErrorReason.SECURITY_ERROR, "You cannot use an empty name.");
+					return;
+				}
 				boolean nameChanged = false;
 				while (!searchPlayerByNameExact(senderName).isEmpty()) {
 					senderName += " - Copy";
@@ -68,7 +72,8 @@ public class Chat extends ClientListVerticle {
 					event.reply("This name is already taken. Your name has been changed to " + senderName);
 				}
 				sender.setName(senderName);
-			} else if (sender.name() != null && !senderName.equals(sender.name())) {
+			}
+			if (!senderName.equals(sender.name())) {
 				logger.warn("{} tried to send a message with a different name ({})!", sender, senderName);
 				event.fail(EventErrorReason.SECURITY_ERROR, "You cannot send chat messags with a name other than \""
 						+ sender.name() + "\" unless you change it.");
