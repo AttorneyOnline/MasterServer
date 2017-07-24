@@ -125,7 +125,7 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 
 	/** Gets a list of connected players that match a case-insensitive search string. */
 	public Collection<Player> searchPlayerByNameFuzzy(String name) {
-		return playerList.values().stream().filter(player -> player.name().toLowerCase().contains(name))
+		return playerList.values().stream().filter(player -> player.name().toLowerCase().contains(name.toLowerCase()))
 				.collect(Collectors.toList());
 	}
 	
