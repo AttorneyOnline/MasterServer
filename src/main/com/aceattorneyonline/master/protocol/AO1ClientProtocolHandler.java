@@ -20,6 +20,8 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
+import inet.ipaddr.IPAddress;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;

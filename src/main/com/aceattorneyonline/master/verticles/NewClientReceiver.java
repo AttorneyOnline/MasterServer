@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.Advertiser;
+import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.EventErrorReason;
@@ -14,6 +15,8 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import inet.ipaddr.IPAddress;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
@@ -45,7 +48,7 @@ public class NewClientReceiver extends ClientListVerticle {
 					removePlayer(clientId, player);
 				});
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
-					event.reply(reply.result().body());
+					event.reply(reply.result().body() + "\n" + addUserSpecificMessage(player));
 				});
 			} else {
 				event.fail(EventErrorReason.INTERNAL_ERROR, "Player does not exist on player table");
@@ -53,6 +56,16 @@ public class NewClientReceiver extends ClientListVerticle {
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse NewPlayer protobuf");
 		}
+	}
+
+	/** Adds a user-specific message on top of the MOTD itself. */
+	private String addUserSpecificMessage(Client client) {
+		StringBuilder message = new StringBuilder();
+		IPAddress address = new IPAddressString(client.address().host()).getAddress();
+		if (address.isIPv6()) {
+			message.append("You are connected to the master server via IPv6. Great!");
+		}
+		return message.toString();
 	}
 
 	public void handleNewAdvertiser(Message<byte[]> event) {
