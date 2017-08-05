@@ -1,4 +1,4 @@
-package com.aceatorneyonline.master.verticles;
+package com.aceattorneyonline.master.verticles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
