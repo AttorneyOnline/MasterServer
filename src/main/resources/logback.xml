@@ -16,7 +16,8 @@
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<File>logs/daily/masterserver.log</File>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>masterserver.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<FileNamePattern>logs/daily/masterserver.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+			<maxFileSize>50MB</maxFileSize>
 			<maxHistory>30</maxHistory> <!-- in days -->
 		</rollingPolicy>
 
