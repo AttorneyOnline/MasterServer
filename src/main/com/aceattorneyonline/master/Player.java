@@ -27,7 +27,7 @@ public class Player extends Client {
 	
 	public void setName(String name) {
 		this.name = name;
-		logger.debug("User {} set their name to {}", address(), name);
+		logger.debug("{}: Set name to {}", address(), name);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class Player extends Client {
 	/** Sets the admin status of a player. <em>Use with caution!</em> */
 	public void setAdmin(boolean admin) {
 		this.admin = admin;
-		logger.debug("User {} set themselves to admin: {}", address(), admin);
+		logger.debug("{}: Set admin status: {}", address(), admin);
 	}
 
 	/** Returns whether or not player has full admin rights. */

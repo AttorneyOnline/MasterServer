@@ -29,7 +29,7 @@ public abstract class ServerListVerticle extends ClientListVerticle {
 
 	/** Caches a sorted version of the server list. */
 	private void cacheServerList() {
-		logger.debug("Server list cache is dirty. Rebuilding.");
+		logger.trace("Server list cache is dirty. Rebuilding.");
 		synchronized (serverListCache) {
 			serverListCache = serverList.values().stream().sorted(listComparator).collect(Collectors.toList());
 		}

@@ -63,7 +63,7 @@ public class BanList extends ClientListVerticle {
 			Player requestingPlayer = getPlayerById(id);
 			String targetText = ban.getTarget();
 
-			logger.debug("User {} is requesting to ban {}", id.toString(), targetText);
+			logger.info("{}: User is requesting to ban {}", id.toString(), targetText);
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
@@ -143,7 +143,7 @@ public class BanList extends ClientListVerticle {
 			Player requestingPlayer = getPlayerById(id);
 			String targetText = ban.getTarget();
 
-			logger.debug("User {} is requesting to unban {}", requestingPlayer, targetText);
+			logger.info("{}: User is requesting to unban {}", requestingPlayer, targetText);
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");

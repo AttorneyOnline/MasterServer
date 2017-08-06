@@ -45,7 +45,7 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 	}
 
 	public void handle(NetSocket socket, Buffer buffer) {
-		logger.info("Handling socket {}", socket.remoteAddress());
+		logger.info("New connection: {}", socket.remoteAddress());
 		boolean wait = false;
 		for (ProtocolHandler handler : handlerList) {
 			switch (handler.isCompatible(socket, buffer)) {
@@ -58,7 +58,7 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 				return;
 			case WAIT:
 				wait = true;
-				logger.debug("Will wait on {}", handler);
+				logger.trace("Will wait on {}", handler);
 				break;
 			default:
 			case FAIL:
@@ -67,7 +67,7 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 			}
 		}
 		if (!wait) {
-			logger.warn("Client {} was disconnected due to invalid protocol: {}", socket.remoteAddress(), buffer.toString());
+			logger.warn("{}: Client was disconnected due to invalid protocol: {}", socket.remoteAddress(), buffer.toString());
 			socket.end(Buffer.buffer("Invalid protocol"));
 		}
 	}

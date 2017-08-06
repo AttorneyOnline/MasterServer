@@ -61,9 +61,10 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 								.setDescription(unescape(tokens.get(3))).setVersion(version).build().toByteArray(),
 						reply -> {
 							if (reply.succeeded()) {
+								logger.debug("{}: Sent new heartbeat success", context());
 								context().protocolWriter().sendNewHeartbeatSuccess();
 							} else {
-								logger.warn("Advertiser dropped due to heartbeat event failure");
+								logger.warn("{}: Advertiser dropped due to heartbeat event failure", context());
 								context().socket().close();
 							}
 						});
@@ -85,15 +86,16 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 			switch (errorCode) {
 			default: // For unhandled exceptions
 			case EventErrorReason.INTERNAL_ERROR:
-				logger.error("Internal error from: {}", message);
+				logger.error("{}: Internal error: {}", context(), message);
 				break;
 			case EventErrorReason.SECURITY_ERROR:
-				logger.warn("Security error from {}: {}", message);
+				logger.warn("{}: Security error: {}", context(), message);
 				break;
 			case EventErrorReason.USER_ERROR:
-				logger.info("User error from {}: {}", message);
+				logger.info("{}: User error: {}", context(), message);
 				break;
 			}
+			// Don't handle advertisers in bad states. Just let them reconnect by themselves.
 			context().socket().close();
 		}
 	}

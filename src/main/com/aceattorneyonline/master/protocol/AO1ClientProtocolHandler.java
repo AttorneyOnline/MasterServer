@@ -40,7 +40,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 	public AO1ClientProtocolHandler(Client context) {
 		super(context);
 		// XXX: this might lead to a race condition, so supervise carefully!
-		logger.debug("Sending new player event for {}", context());
+		logger.debug("{}: Sending new player event", context());
 		MasterServer.vertx.eventBus().<String>send(
 				Events.NEW_PLAYER.getEventName(), NewPlayer.newBuilder()
 						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
@@ -49,9 +49,9 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 						ProtocolWriter writer = context.protocolWriter();
 						String resultBody = reply.result().body();
 						writer.sendSystemMessage(resultBody);
-						logger.debug("New player success");
+						logger.debug("{}: New player success", context());
 					} else {
-						logger.error("New player failed: {}", reply.cause());
+						logger.error("{}: New player failed: {}", context(), reply.cause());
 					}
 				});
 	}
@@ -62,7 +62,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 		try {
 			packet = packet.substring(0, packet.indexOf('%'));
 		} catch (StringIndexOutOfBoundsException e) {
-			logger.error("Packet without % delimiter! {}", packet);
+			logger.error("{}: Packet without % delimiter! {}", context(), packet);
 		}
 		List<String> tokens = Arrays.asList(packet.split("#"));
 		EventBus eventBus = MasterServer.vertx.eventBus();
@@ -97,7 +97,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			}
 			break;
 		default:
-			logger.warn("Unknown message from {}: {}", context(), packet);
+			logger.warn("{} Received unknown message: {}", context(), packet);
 			break;
 		}
 	}
@@ -113,16 +113,16 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			default: // For unhandled exceptions
 			case EventErrorReason.INTERNAL_ERROR:
 				context().protocolWriter().sendSystemMessage("Internal error: " + message);
-				logger.error("Internal error: {}", message);
+				logger.error("{}: Internal error: {}", context(), message);
 				break;
 			case EventErrorReason.SECURITY_ERROR:
 				context().protocolWriter()
 						.sendSystemMessage("Security error: " + message + "\nThis incident has been logged.");
-				logger.warn("Security error: {}", message);
+				logger.warn("{}: Security error: {}", context(), message);
 				break;
 			case EventErrorReason.USER_ERROR:
 				context().protocolWriter().sendSystemMessage("User error: " + message);
-				logger.info("User error: {}", message);
+				logger.info("{}: User error: {}", context(), message);
 				break;
 			}
 		}

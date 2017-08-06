@@ -19,7 +19,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	public AOProtocolWriter(WriteStream<Buffer> writer) {
 		this.writer = writer;
-		logger.debug("Instantiated AOProtocolWriter");
+		logger.trace("Instantiated AOProtocolWriter");
 	}
 
 	@Override
@@ -92,7 +92,6 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	@Override
 	public void sendNewHeartbeatSuccess() {
-		logger.debug("Sent new heartbeat success");
 		writer.write(Buffer.buffer("PSDD#0#%"));
 	}
 	

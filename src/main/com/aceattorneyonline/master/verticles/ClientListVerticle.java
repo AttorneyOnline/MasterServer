@@ -104,7 +104,7 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 	private static final ClientListSingleton singleton = new ClientListSingleton();
 
 	public static ClientListSingleton getSingleton() {
-		logger.debug("Client list singleton retrieved");
+		logger.trace("Client list singleton retrieved");
 		return singleton;
 	}
 

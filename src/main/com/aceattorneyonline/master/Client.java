@@ -36,7 +36,7 @@ public abstract class Client {
 	}
 
 	public void setProtocolWriter(ProtocolWriter writer) {
-		logger.debug("Set protocol writer of {} to {}", this, writer.getClass().getSimpleName());
+		logger.debug("{}: Set protocol writer to {}", this, writer.getClass().getSimpleName());
 		this.writer = writer;
 	}
 

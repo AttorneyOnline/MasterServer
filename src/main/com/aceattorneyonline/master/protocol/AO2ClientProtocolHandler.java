@@ -34,7 +34,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 
 	@Override
 	public void handle(Buffer event) {
-		logger.debug("Handling incoming packet");
+		logger.trace("{}: Handling incoming packet", context());
 		String packet = event.toString("UTF-8").trim();
 		packet = packet.substring(0, packet.indexOf('%'));
 		List<String> tokens = Arrays.asList(packet.split("#"));
@@ -69,7 +69,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 			}
 			break;
 		default:
-			logger.warn("Unknown message from {}: {}", context(), packet);
+			logger.warn("{}: Received unknown message: {}", context(), packet);
 			break;
 		}
 	}

@@ -43,7 +43,7 @@ public class ServerList extends ServerListVerticle {
 			GetServerList gsl = GetServerList.parseFrom(event.body());
 			UUID id = UUID.fromString(gsl.getId().getId());
 			Client client = getClientById(id);
-			logger.debug("Handling get server list event from {}", client);
+			logger.debug("{}: Handling get server list event", client);
 			client.protocolWriter().sendServerEntries(getSortedServerList());
 			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
