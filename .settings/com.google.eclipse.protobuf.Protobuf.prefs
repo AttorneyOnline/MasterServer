@@ -1,0 +1,2 @@
+eclipse.preferences.version=1
+paths.directoryPaths=${workspace_loc\:/${project}/target/generated-sources/protobuf}
