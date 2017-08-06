@@ -59,6 +59,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>com.aceattorneyonline.master.MasterServer</mainClass>
             </manifest>
             <manifestEntries>
               <Specification-Title>${project.name}</Specification-Title>
