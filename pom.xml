@@ -55,12 +55,16 @@
         <version>3.0.2</version>
         <configuration>
           <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
             <manifestEntries>
               <Specification-Title>${project.name}</Specification-Title>
               <Specification-Version>${project.version}</Specification-Version>
               <Specification-Vendor>${project.specification_vendor}</Specification-Vendor>
               <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
-              <Implementation-Version>${git.buildnumber}</Implementation-Version>
+              <Implementation-Version>${project.version}-r${git.commitsCount}-${git.buildnumber}</Implementation-Version>
               <Implementation-Vendor>${project.implementation_vendor}</Implementation-Vendor>
               <X-Git-Branch>${git.branch}</X-Git-Branch>
               <X-Git-Tag>${git.tag}</X-Git-Tag>
@@ -87,7 +91,7 @@
               <Specification-Version>${project.version}</Specification-Version>
               <Specification-Vendor>${project.specification_vendor}</Specification-Vendor>
               <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
-              <Implementation-Version>${git.buildnumber}</Implementation-Version>
+              <Implementation-Version>${project.version}-r${git.commitsCount}-${git.buildnumber}</Implementation-Version>
               <Implementation-Vendor>${project.implementation_vendor}</Implementation-Vendor>
               <X-Git-Branch>${git.branch}</X-Git-Branch>
               <X-Git-Tag>${git.tag}</X-Git-Tag>
