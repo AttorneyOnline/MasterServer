@@ -65,6 +65,7 @@
               <X-Git-Branch>${git.branch}</X-Git-Branch>
               <X-Git-Tag>${git.tag}</X-Git-Tag>
               <X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count>
+              <Build-Time>${maven.build.timestamp}</Build-Time>
             </manifestEntries>
           </archive>
         </configuration>
@@ -91,6 +92,7 @@
               <X-Git-Branch>${git.branch}</X-Git-Branch>
               <X-Git-Tag>${git.tag}</X-Git-Tag>
               <X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count>
+              <Build-Time>${maven.build.timestamp}</Build-Time>
             </manifestEntries>
           </archive>
         </configuration>
