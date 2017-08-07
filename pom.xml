@@ -169,5 +169,10 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-shell</artifactId>
+      <version>3.4.2</version>
+    </dependency>
   </dependencies>
 </project>

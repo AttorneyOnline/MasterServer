@@ -14,6 +14,7 @@ import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
+import com.aceattorneyonline.master.verticles.RemoteShell;
 import com.aceattorneyonline.master.verticles.ServerList;
 import com.aceattorneyonline.master.verticles.Version;
 
@@ -69,6 +70,7 @@ public class MasterServer {
 		vertx.deployVerticle(Chat.class.getName());
 		vertx.deployVerticle(Motd.class.getName());
 		vertx.deployVerticle(Version.class.getName());
+		vertx.deployVerticle(RemoteShell.class.getName());
 	}
 
 	private void createVertxServer() {
