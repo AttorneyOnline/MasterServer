@@ -39,6 +39,7 @@ public class Version extends ClientListVerticle {
 			UUID id = UUID.fromString(gv.getId().getId());
 			Client client = getClientById(id);
 			client.protocolWriter().sendVersion(MasterServer.VERSION);
+			event.reply("Server version: " + MasterServer.VERSION);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(1, "Could not parse GetVersion protobuf");
 		}
