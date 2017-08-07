@@ -27,7 +27,7 @@ public class Player extends Client {
 	
 	public void setName(String name) {
 		this.name = name;
-		logger.debug("{}: Set name to {}", address(), name);
+		logger.debug("{}: Set name to {}", this, name);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class Player extends Client {
 		if (name == null || name.isEmpty()) {
 			name = "(unnamed)";
 		}
-		return String.format("%s - Player %3s %12s", id(), admin ? "(a)" : "", name);
+		return String.format("%s - Player %s %s", id(), admin ? "(a)" : "", name);
 	}
 
 	/** Sets the admin status of a player. <em>Use with caution!</em> */

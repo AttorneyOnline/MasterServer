@@ -59,7 +59,7 @@ public class AdvertisedServer {
 	}
 
 	public String toString() {
-		return String.format("Server (%8s) - %30s - %s:%d", version(), name(), address().host(), port());
+		return String.format("Server (%s) - %s - %s:%d", version(), name(), address().host(), port());
 	}
 
 }
