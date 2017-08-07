@@ -55,9 +55,11 @@ public class ServerList extends ServerListVerticle {
 		try {
 			GetServerListPaged gslp = GetServerListPaged.parseFrom(event.body());
 			UUID id = UUID.fromString(gslp.getId().getId());
+			Client client = getClientById(id);
 			int pageNo = gslp.getPage();
+			logger.debug("{}: Handling paged get server list event (page {})", client, pageNo);
 			AdvertisedServer server = getSortedServerList().get(pageNo);
-			getClientById(id).protocolWriter().sendServerEntry(pageNo, server);
+			client.protocolWriter().sendServerEntry(pageNo, server);
 			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");

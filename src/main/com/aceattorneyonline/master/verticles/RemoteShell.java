@@ -1,13 +1,22 @@
 package com.aceattorneyonline.master.verticles;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Formatter;
 import java.util.UUID;
 
+import org.fusesource.jansi.Ansi.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.AdvertisedServer;
+import com.aceattorneyonline.master.Advertiser;
+import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
@@ -17,7 +26,12 @@ import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.cli.Argument;
 import io.vertx.core.cli.CLI;
+import io.vertx.core.cli.Option;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.SocketAddress;
+import io.vertx.core.net.impl.NetSocketImpl;
+import io.vertx.core.net.impl.SocketAddressImpl;
 import io.vertx.ext.shell.ShellService;
 import io.vertx.ext.shell.ShellServiceOptions;
 import io.vertx.ext.shell.command.CommandBuilder;
@@ -48,32 +62,129 @@ public class RemoteShell extends AbstractVerticle {
 	        );
 	    service.start();
 
-	    mockPlayer = new Player(null); // This code smells bad. Really bad.
+		// HACK: create a fake, NetSocket-less client for all remote shell actions,
+	    // because default telnet server doesn't let us handle anything extra on connect/disconnect
+	    mockPlayer = new ShellPlayer();
 	    ClientListVerticle.getSingleton().addPlayer(mockPlayer.id(), mockPlayer);
 
-	    //createInitClient();
+	    createTop();
 	    createSay();
 	}
 
-	// HACK: functions to create and delete clients, because default telnet server doesn't let us handle
-	// anything extra on connect/disconnect
-	
-	/*
-	private void createInitClient() {
-		CLI cli = CLI.create("init")
-				.addArgument(new Argument()
-						.setArgName("name")
-						.setDescription("The name of the new client")
-						.setRequired(true)
-						);
-		CommandBuilder builder = CommandBuilder.command(cli)
-				.processHandler(this::initClient);
-		builder.build(getVertx());
+	private class ShellPlayer extends Player {
+
+		public ShellPlayer() {
+			super(null); // This code smells bad. Really bad.
+		}
+
+		@Override
+		public boolean hasAdmin() {
+			return true;
+		}
+
+		@Override
+		public SocketAddress address() {
+			return new SocketAddressImpl(PORT, "localhost");
+		}
+
 	}
 
-	private void initClient(CommandProcess process) {
+	// TODO drop client on verticle stop
+
+	private void createTop() {
+		CLI cli = CLI.create("top")
+				.addOption(new Option()
+						.setArgName("p")
+						.setLongName("show-players")
+						.setFlag(true)
+						.setSingleValued(true)
+						)
+				.addOption(new Option()
+						.setArgName("s")
+						.setLongName("show-servers")
+						.setFlag(true)
+						.setSingleValued(true)
+						)
+				.addOption(new Option()
+						.setArgName("a")
+						.setLongName("show-all")
+						.setFlag(true)
+						.setSingleValued(true)
+						.setDefaultValue("true")
+						);
+		CommandBuilder builder = CommandBuilder.command(cli)
+				.processHandler(this::top);
+		CommandRegistry.getShared(getVertx()).registerCommand(builder.build(getVertx()));
 	}
-	*/
+
+	private void top(CommandProcess process) {
+		if (checkTermSizeError(process)) return;
+
+		ClientListVerticle clv = ClientListVerticle.getSingleton();
+
+		long id = process.vertx().setPeriodic(1000, handler -> {
+			if (checkTermSizeError(process)) return;
+			StringBuilder builder = new StringBuilder();
+			Formatter formatter = new Formatter(builder);
+			ansi(builder).eraseScreen().cursor(0, 0);
+
+			// Print header
+			Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
+			formatter.format("top - %tT - up %d days %02d:%02d, %2d clients, %2d advertised", Instant.now().toEpochMilli(),
+					uptime.toDays(),
+					uptime.toHours() % 24,
+					uptime.toMinutes() % 60,
+					clv.getClientsList().size(),
+					clv.getAdvertisersList().size());
+
+			// Print columns
+			ansi(builder).newline().bg(Color.DEFAULT).fg(Color.WHITE);
+			formatter.format("%36s %30s %15s %11s %1s %10s", "UUID", "Name", "IP", "Uptime", "A", "Protocol");
+			ansi(builder).bg(Color.BLACK).fg(Color.DEFAULT).newline();
+
+			boolean showAll = process.commandLine().isFlagEnabled("show-all");
+			boolean showPlayers = process.commandLine().isFlagEnabled("show-players");
+			boolean showServers = process.commandLine().isFlagEnabled("show-servers");
+			int curRow = 3;
+			if (showAll || showPlayers)
+				for(Player player : clv.getPlayersList()) {
+					if (curRow > process.height() && process.height() > 0) break;
+					formatter.format("%36s %30s %15s %11s %1s %10s", player.id(), player.name(), player.address(),
+							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
+					ansi(builder).newline(); curRow++;
+				}
+			if (showAll || showServers)
+				for(Advertiser advertiser: clv.getAdvertisersList()) {
+					if (curRow > process.height() && process.height() > 0) break;
+					AdvertisedServer server = advertiser.server();
+					if (server != null) {
+						Duration advUptime = server.uptime();
+						formatter.format("%36s %30s %15s %2d:%2d:%2d:%2d %1s %10s", advertiser.id(), server.name(), server.address(),
+								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
+								advertiser.protocolWriter().getClass().getSimpleName());
+						ansi(builder).newline(); curRow++;
+					}
+				}
+
+			process.write(builder.toString());
+			formatter.close();
+		});
+
+		process.interruptHandler(interrupt -> {
+			process.vertx().cancelTimer(id);
+			process.end();
+		});
+	}
+
+	/** Check if the terminal size is too small and report an error if there is. */
+	private boolean checkTermSizeError(CommandProcess process) {
+		if (process.height() < 4 || process.width() < 20) {
+			process.write("Sorry, but your terminal is too small to run this program.\n");
+			process.end(1);
+			return true;
+		}
+		return false;
+	}
 
 	private void createSay() {
 		CLI cli = CLI.create("say")

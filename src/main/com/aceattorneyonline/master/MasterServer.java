@@ -1,6 +1,7 @@
 package com.aceattorneyonline.master;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,6 +41,8 @@ public class MasterServer {
 			VERSION = pkg.getImplementationVersion();
 		}
 	}
+
+	public static final Instant START_TIME = Instant.now();
 
 	private DefaultProtocolHandler defaultHandler;
 
