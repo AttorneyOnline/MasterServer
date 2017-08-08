@@ -12,9 +12,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Attribute;
-import org.fusesource.jansi.Ansi.Color;
-import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,18 +29,13 @@ import io.vertx.core.cli.Argument;
 import io.vertx.core.cli.CLI;
 import io.vertx.core.cli.Option;
 import io.vertx.core.eventbus.ReplyException;
-import io.vertx.core.net.JksOptions;
-import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
-import io.vertx.core.net.impl.NetSocketImpl;
 import io.vertx.core.net.impl.SocketAddressImpl;
-import io.vertx.ext.auth.AuthOptions;
 import io.vertx.ext.shell.ShellService;
 import io.vertx.ext.shell.ShellServiceOptions;
 import io.vertx.ext.shell.command.CommandBuilder;
 import io.vertx.ext.shell.command.CommandProcess;
 import io.vertx.ext.shell.command.CommandRegistry;
-import io.vertx.ext.shell.term.SSHTermOptions;
 import io.vertx.ext.shell.term.TelnetTermOptions;
 
 public class RemoteShell extends AbstractVerticle {
@@ -151,7 +143,7 @@ public class RemoteShell extends AbstractVerticle {
 			// Print columns
 			ansi(builder).newline().a(Ansi.Attribute.NEGATIVE_ON)
 					.format("%36s  %30s  %15s  %11s  %1s  %20s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
-					.newline().a(Ansi.Attribute.NEGATIVE_OFF);
+					.a(Ansi.Attribute.NEGATIVE_OFF).newline();
 			
 
 			boolean showAll = process.commandLine().isFlagEnabled("show-all");
