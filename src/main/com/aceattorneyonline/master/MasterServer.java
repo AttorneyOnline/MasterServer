@@ -13,6 +13,7 @@ import com.aceattorneyonline.master.protocol.AO2ClientProtocolHandler;
 import com.aceattorneyonline.master.protocol.AOServerProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
+import com.aceattorneyonline.master.verticles.ClientListVerticle;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
 import com.aceattorneyonline.master.verticles.RemoteShell;
@@ -58,6 +59,23 @@ public class MasterServer {
 		setupProtocolHandlers();
 		setupVerticles();
 		createVertxServer();
+		shutdownHook();
+	}
+
+	private void shutdownHook() {
+		final Thread mainThread = Thread.currentThread();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+		    public void run() {
+		        try {
+		        	for (Player player : ClientListVerticle.getSingleton().getPlayersList()) {
+		        		player.protocolWriter().sendSystemMessage("Server is shutting down/restarting.");
+		        	}
+					mainThread.join();
+				} catch (InterruptedException e) {
+					logger.error("Interrupted while trying to join to main thread on shutdown!", e);
+				}
+		    }
+		});
 	}
 
 	private void setupProtocolHandlers() {
