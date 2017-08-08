@@ -33,7 +33,7 @@ public class MasterServer {
 	public static final String VERSION;
 	static {
 		Package pkg = MasterServer.class.getPackage();
-		if (pkg == null) {
+		if (pkg == null || pkg.getImplementationVersion() == null) {
 			logger.warn("No package/manifest found to get a server version from! \n"
 					+ "(usually this happens when the server is not being run from a jar file)");
 			VERSION = "(debug)";
