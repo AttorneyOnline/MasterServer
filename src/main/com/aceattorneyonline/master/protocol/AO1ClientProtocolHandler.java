@@ -82,7 +82,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			// But when there are no more pages, there is no response.
 			eventBus.send(
 					Events.GET_SERVER_LIST_PAGED.getEventName(), GetServerListPaged.newBuilder().setId(id)
-							.setPage(Integer.parseInt(tokens.get(1) + 1)).build().toByteArray(),
+							.setPage(Integer.parseInt(tokens.get(1)) + 1).build().toByteArray(),
 					this::handleEventReply);
 			break;
 		case "CT":
