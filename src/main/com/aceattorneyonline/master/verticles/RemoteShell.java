@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Formatter;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -128,12 +127,12 @@ public class RemoteShell extends AbstractVerticle {
 		long id = process.vertx().setPeriodic(1000, handler -> {
 			if (checkTermSizeError(process)) return;
 			StringBuilder builder = new StringBuilder();
-			Formatter formatter = new Formatter(builder);
-			ansi(builder).cursor(0, 0);
+			Ansi ansi = ansi(builder);
+			ansi.a(Ansi.Attribute.CONCEAL_ON).cursor(0, 0);
 
 			// Print header
 			Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
-			formatter.format("top - %tT - up %d days %02d:%02d, %2d clients, %2d advertised", Instant.now().toEpochMilli(),
+			ansi.format("top - %tT - up %d days %02d:%02d, %2d clients, %2d advertised", Instant.now().toEpochMilli(),
 					uptime.toDays(),
 					uptime.toHours() % 24,
 					uptime.toMinutes() % 60,
@@ -141,7 +140,7 @@ public class RemoteShell extends AbstractVerticle {
 					clv.getAdvertisersList().size());
 
 			// Print columns
-			ansi(builder).newline().a(Ansi.Attribute.NEGATIVE_ON)
+			ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
 					.format("%36s  %30s  %15s  %11s  %1s  %20s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
 					.a(Ansi.Attribute.NEGATIVE_OFF).newline();
 			
@@ -151,31 +150,31 @@ public class RemoteShell extends AbstractVerticle {
 			boolean showServers = process.commandLine().isFlagEnabled("show-servers");
 			int curRow = 3;
 			if (showAll || showPlayers)
-				for(Player player : clv.getPlayersList()) {
-					if (curRow > process.height() && process.height() > 0) break;
-					formatter.format("%36s  %30s  %15s  %11s  %1s  %20s", player.id(), player.name(), player.address(),
+				for (Player player : clv.getPlayersList()) {
+					if (curRow >= process.height() && process.height() > 0) break;
+					ansi.format("%36s  %30s  %15s  %11s  %1s  %20s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
-					ansi(builder).newline(); curRow++;
+					ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 				}
 			if (showAll || showServers)
-				for(Advertiser advertiser: clv.getAdvertisersList()) {
-					if (curRow > process.height() && process.height() > 0) break;
+				for (Advertiser advertiser: clv.getAdvertisersList()) {
+					if (curRow >= process.height() && process.height() > 0) break;
 					AdvertisedServer server = advertiser.server();
 					if (server != null) {
 						Duration advUptime = server.uptime();
-						formatter.format("%36s  %30s  %15s  %02d:%02d:%02d:%02d  %1s  %20s", advertiser.id(), server.name(), server.address(),
+						ansi.format("%36s  %30s  %15s  %02d:%02d:%02d:%02d  %1s  %20s", advertiser.id(), server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
 								advertiser.protocolWriter().getClass().getSimpleName());
-						ansi(builder).newline(); curRow++;
+						ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 					}
 				}
-			ansi(builder).eraseScreen(Ansi.Erase.FORWARD);
+			ansi.eraseScreen(Ansi.Erase.FORWARD);
 			process.write(builder.toString());
-			formatter.close();
 		});
 
 		process.interruptHandler(interrupt -> {
 			process.vertx().cancelTimer(id);
+			process.write(ansi().reset().toString());
 			process.end();
 		});
 	}
