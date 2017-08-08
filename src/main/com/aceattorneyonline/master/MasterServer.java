@@ -97,11 +97,11 @@ public class MasterServer {
 
 	private static void logUncaughtExceptions() {
 	    try {
-	        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-	            @Override
-	            public void uncaughtException(Thread t, Throwable e) {
-	                logger.error("Uncaught exception detected in thread " + t, e);
-	            }
+	        Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
+                logger.error("Uncaught exception in thread " + thread, e);
+            });
+	        vertx.exceptionHandler(e -> {
+	        	logger.error("Uncaught exception in Vert.x thread!", e);
 	        });
 	    } catch (SecurityException e) {
 	        logger.error("Unable to set the default uncaught exception handler!", e);
