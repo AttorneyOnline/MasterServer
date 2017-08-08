@@ -9,8 +9,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Formatter;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Attribute;
 import org.fusesource.jansi.Ansi.Color;
+import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +32,18 @@ import io.vertx.core.cli.Argument;
 import io.vertx.core.cli.CLI;
 import io.vertx.core.cli.Option;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.NetSocketImpl;
 import io.vertx.core.net.impl.SocketAddressImpl;
+import io.vertx.ext.auth.AuthOptions;
 import io.vertx.ext.shell.ShellService;
 import io.vertx.ext.shell.ShellServiceOptions;
 import io.vertx.ext.shell.command.CommandBuilder;
 import io.vertx.ext.shell.command.CommandProcess;
 import io.vertx.ext.shell.command.CommandRegistry;
+import io.vertx.ext.shell.term.SSHTermOptions;
 import io.vertx.ext.shell.term.TelnetTermOptions;
 
 public class RemoteShell extends AbstractVerticle {
@@ -53,7 +60,8 @@ public class RemoteShell extends AbstractVerticle {
 	public void start() {
 		logger.info("Remote shell verticle starting");
 	    ShellService service = ShellService.create(vertx,
-	            new ShellServiceOptions().setTelnetOptions(
+	            new ShellServiceOptions()
+	            .setTelnetOptions(
 	                new TelnetTermOptions()
 	                    .setHost("localhost")
 	                    .setPort(PORT)
@@ -87,6 +95,10 @@ public class RemoteShell extends AbstractVerticle {
 			return new SocketAddressImpl(PORT, "localhost");
 		}
 
+		@Override
+		public String name() {
+			return "System";
+		}
 	}
 
 	// TODO drop client on verticle stop
@@ -121,12 +133,11 @@ public class RemoteShell extends AbstractVerticle {
 		if (checkTermSizeError(process)) return;
 
 		ClientListVerticle clv = ClientListVerticle.getSingleton();
-
 		long id = process.vertx().setPeriodic(1000, handler -> {
 			if (checkTermSizeError(process)) return;
 			StringBuilder builder = new StringBuilder();
 			Formatter formatter = new Formatter(builder);
-			ansi(builder).eraseScreen().cursor(0, 0);
+			ansi(builder).cursor(0, 0);
 
 			// Print header
 			Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
@@ -138,9 +149,10 @@ public class RemoteShell extends AbstractVerticle {
 					clv.getAdvertisersList().size());
 
 			// Print columns
-			ansi(builder).newline().bg(Color.DEFAULT).fg(Color.WHITE);
-			formatter.format("%36s %30s %15s %11s %1s %10s", "UUID", "Name", "IP", "Uptime", "A", "Protocol");
-			ansi(builder).bg(Color.BLACK).fg(Color.DEFAULT).newline();
+			ansi(builder).newline().a(Ansi.Attribute.NEGATIVE_ON)
+					.format("%36s  %30s  %15s  %11s  %1s  %20s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
+					.newline().a(Ansi.Attribute.NEGATIVE_OFF);
+			
 
 			boolean showAll = process.commandLine().isFlagEnabled("show-all");
 			boolean showPlayers = process.commandLine().isFlagEnabled("show-players");
@@ -149,7 +161,7 @@ public class RemoteShell extends AbstractVerticle {
 			if (showAll || showPlayers)
 				for(Player player : clv.getPlayersList()) {
 					if (curRow > process.height() && process.height() > 0) break;
-					formatter.format("%36s %30s %15s %11s %1s %10s", player.id(), player.name(), player.address(),
+					formatter.format("%36s  %30s  %15s  %11s  %1s  %20s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
 					ansi(builder).newline(); curRow++;
 				}
@@ -159,13 +171,13 @@ public class RemoteShell extends AbstractVerticle {
 					AdvertisedServer server = advertiser.server();
 					if (server != null) {
 						Duration advUptime = server.uptime();
-						formatter.format("%36s %30s %15s %2d:%2d:%2d:%2d %1s %10s", advertiser.id(), server.name(), server.address(),
+						formatter.format("%36s  %30s  %15s  %02d:%02d:%02d:%02d  %1s  %20s", advertiser.id(), server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
 								advertiser.protocolWriter().getClass().getSimpleName());
 						ansi(builder).newline(); curRow++;
 					}
 				}
-
+			ansi(builder).eraseScreen(Ansi.Erase.FORWARD);
 			process.write(builder.toString());
 			formatter.close();
 		});
@@ -200,9 +212,10 @@ public class RemoteShell extends AbstractVerticle {
 	}
 
 	private void say(CommandProcess process) {
+		String chatMessage = process.args().stream().collect(Collectors.joining(" "));
 		getVertx().eventBus().<String>send(Events.SEND_CHAT.getEventName(),
 				SendChat.newBuilder().setId(Uuid.newBuilder().setId(mockPlayer.id().toString()).build())
-				.setUsername("System").setMessage(process.args().get(0)).build().toByteArray(),
+				.setUsername("System").setMessage(chatMessage).build().toByteArray(),
 				reply -> { // Similar reply handler to those in the protocol handlers
 					if (reply.succeeded() && reply.result().body() != null) {
 						process.write(reply.result().body());
@@ -242,7 +255,7 @@ public class RemoteShell extends AbstractVerticle {
 			return new String(Files.readAllBytes(new File(filename).toPath()), "UTF-8");
 		} catch (IOException e) {
 			logger.warn("Welcome file {} was not found. Using the default one.", filename);
-			return "Welcome to the Attorney Online master server shell!";
+			return "Welcome to the Attorney Online master server shell!\n";
 		}
 	}
 
