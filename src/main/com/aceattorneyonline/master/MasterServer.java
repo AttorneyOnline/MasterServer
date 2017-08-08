@@ -49,6 +49,7 @@ public class MasterServer {
 	public static final Vertx vertx = Vertx.vertx();
 
 	public static void main(String[] args) throws IOException, InterruptedException {
+		logUncaughtExceptions();
 		new MasterServer().run();
 	}
 
@@ -74,6 +75,19 @@ public class MasterServer {
 		vertx.deployVerticle(Motd.class.getName());
 		vertx.deployVerticle(Version.class.getName());
 		vertx.deployVerticle(RemoteShell.class.getName());
+	}
+
+	private static void logUncaughtExceptions() {
+	    try {
+	        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+	            @Override
+	            public void uncaughtException(Thread t, Throwable e) {
+	                logger.error("Uncaught exception detected in thread " + t, e);
+	            }
+	        });
+	    } catch (SecurityException e) {
+	        logger.error("Unable to set the default uncaught exception handler!", e);
+	    }
 	}
 
 	private void createVertxServer() {
