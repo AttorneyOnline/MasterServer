@@ -156,9 +156,9 @@ public class Motd extends ClientListVerticle {
 					formatter.format("%d seconds", totalSeconds);
 				else {
 					if (days > 0)
-						formatter.format("%d day%s", days, days > 1 ? "s" : "");
+						formatter.format("%d day%s ", days, days > 1 ? "s" : "");
 					if (hours > 0)
-						formatter.format("%d hour%s", hours, hours > 1 ? "s" : "");
+						formatter.format("%d hour%s ", hours, hours > 1 ? "s" : "");
 					if (minutes > 0)
 						formatter.format("%d minute%s", minutes, minutes > 1 ? "s" : "");
 				}
