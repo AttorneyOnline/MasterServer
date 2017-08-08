@@ -75,7 +75,7 @@ public class Chat extends ClientListVerticle {
 			}
 			if (!senderName.equals(sender.name())) {
 				logger.warn("{} tried to send a message with a different name ({})!", sender, senderName);
-				event.fail(EventErrorReason.SECURITY_ERROR, "You cannot send chat messags with a name other than \""
+				event.fail(EventErrorReason.SECURITY_ERROR, "You cannot send chat messages with a name other than \""
 						+ sender.name() + "\" unless you change it.");
 				// TODO make !name command to change one's name
 			} else if (message.isEmpty()) {
