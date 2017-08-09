@@ -26,8 +26,9 @@ public class AOProtocolWriter implements ProtocolWriter {
 	public void sendServerEntry(int number, AdvertisedServer advertiser) {
 		String ip = advertiser.address().host();
 		int port = advertiser.port();
-		String name = advertiser.name();
+		String name = sanitize(advertiser.name());
 		String version = advertiser.version();
+		String desc = sanitize(advertiser.description());
 
 		StringBuilder packet = new StringBuilder();
 		packet.append("SN#")
@@ -35,7 +36,8 @@ public class AOProtocolWriter implements ProtocolWriter {
 			.append(ip).append("#")
 			.append(version).append("#")
 			.append(port).append("#")
-			.append(name).append("#%");
+			.append(name).append("#")
+			.append(desc).append("#%");
 		write(packet.toString());
 	}
 
