@@ -166,6 +166,8 @@ public class Motd extends ClientListVerticle {
 				formatter.close();
 				return out;
 			});
+			macros.put("players-online", () -> String.valueOf(
+					ClientListVerticle.getSingleton().getPlayersList().stream().filter(p -> p.name() != null && !p.isSystem()).count()));
 		}
 
 		/**
@@ -173,11 +175,12 @@ public class Motd extends ClientListVerticle {
 		 * <ul>
 		 * <li><code>${version}</code></li>
 		 * <li><code>${uptime}</code></li>
+		 * <li><code>${players-online}</code> - the number of players with names that are currently online, excluding system clients</li>
 		 * </ul>
 		 */
 		public static String preprocess(String motd) {
 			for (Entry<String, Macro> entry : macros.entrySet()) {
-				motd = motd.replaceAll("\\$\\{" + entry.getKey() + "\\}", entry.getValue().expand());	
+				motd = motd.replaceAll("\\$\\{" + entry.getKey() + "\\}", entry.getValue().expand());
 			}
 			return motd;
 		}

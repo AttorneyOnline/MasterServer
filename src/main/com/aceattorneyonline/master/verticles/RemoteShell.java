@@ -90,6 +90,11 @@ public class RemoteShell extends AbstractVerticle {
 		public String name() {
 			return "System";
 		}
+
+		@Override
+		public boolean isSystem() {
+			return true;
+		}
 	}
 
 	// TODO drop client on verticle stop

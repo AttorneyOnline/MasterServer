@@ -62,6 +62,14 @@ public abstract class Client {
 		return socket.remoteAddress();
 	}
 
+	/**
+	 * Returns whether or not the client was created internally.
+	 * Such clients are not counted in metrics.
+	 */
+	public boolean isSystem() {
+		return false;
+	}
+
 	public String toString() {
 		return String.format("%s - Client - %s", id(), address().toString());
 	}
