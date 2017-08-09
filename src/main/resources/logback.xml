@@ -52,6 +52,12 @@
       </Pattern>
     </encoder>
   </appender>
+  
+  <logger name="com.aceattorneyonline" level="debug" additivity="false">
+    <appender-ref ref="consoleAppender" />
+    <appender-ref ref="dailyRollingFileAppender" />
+    <appender-ref ref="minuteRollingFileAppender" />
+  </logger>
 
   <logger name="com.aceattorneyonline" level="info" additivity="false">
     <appender-ref ref="simpleDailyRollingFileAppender" />
