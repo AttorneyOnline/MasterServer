@@ -38,7 +38,7 @@ public class ListPlayers extends ClientListVerticle {
 	public void handleListPlayers(Message<byte[]> event) {
 		ClientListVerticle clv = ClientListVerticle.getSingleton();
 		String list = clv.getPlayersList().stream()
-				.filter(p -> !p.name().isEmpty() && !p.isSystem()).map(p -> p.toString())
+				.filter(p -> !p.name().isEmpty() && !p.isSystem()).map(p -> p.name())
 				.collect(Collectors.joining(", "));
 		event.reply(String.format("There are %d players online:\n%s", clv.getNamedPlayerCount(), list));
 	}
