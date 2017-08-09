@@ -43,7 +43,7 @@ public class Player extends Client {
 		if (name == null || name.isEmpty()) {
 			name = "(unnamed)";
 		}
-		return String.format("%s - Player %s %s", id(), admin ? "(a)" : "", name);
+		return String.format("%s - Player %s%s", id(), name, admin ? " (a)" : "");
 	}
 
 	/** Sets the admin status of a player. <em>Use with caution!</em> */
