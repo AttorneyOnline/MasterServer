@@ -166,8 +166,7 @@ public class Motd extends ClientListVerticle {
 				formatter.close();
 				return out;
 			});
-			macros.put("players-online", () -> String.valueOf(ClientListVerticle.getSingleton().getPlayersList()
-					.stream().filter(p -> !p.name().isEmpty() && !p.isSystem()).count()));
+			macros.put("players-online", () -> String.valueOf(ClientListVerticle.getSingleton().getNamedPlayerCount()));
 		}
 
 		/**

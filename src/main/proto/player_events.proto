@@ -57,3 +57,7 @@ message ReplyPM {
 	Uuid id = 1;
 	string message = 2;
 }
+
+// Flood control handled by SendChat
+message ListPlayers {
+}

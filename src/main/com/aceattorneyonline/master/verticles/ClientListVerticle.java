@@ -147,4 +147,8 @@ public abstract class ClientListVerticle extends AbstractVerticle {
 				.collect(Collectors.toList());
 	}
 
+	/** Gets the number of connected non-system players who have names. */
+	public long getNamedPlayerCount() {
+		return getPlayersList().stream().filter(p -> !p.name().isEmpty() && !p.isSystem()).count();
+	}
 }

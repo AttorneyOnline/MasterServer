@@ -15,6 +15,7 @@ import com.aceattorneyonline.master.protocol.WebClientProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
 import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ListPlayers;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
 import com.aceattorneyonline.master.verticles.RemoteShell;
@@ -69,7 +70,7 @@ public class MasterServer {
 		    public void run() {
 		        try {
 		        	for (Player player : ClientListVerticle.getSingleton().getPlayersList()) {
-		        		player.protocolWriter().sendSystemMessage("Server is shutting down/restarting.");
+		        		player.protocolWriter().sendSystemMessage("Master server is restarting.");
 		        	}
 					mainThread.join();
 				} catch (InterruptedException e) {
@@ -94,6 +95,7 @@ public class MasterServer {
 		vertx.deployVerticle(Chat.class.getName());
 		vertx.deployVerticle(Motd.class.getName());
 		vertx.deployVerticle(Version.class.getName());
+		vertx.deployVerticle(ListPlayers.class.getName());
 		vertx.deployVerticle(RemoteShell.class.getName());
 	}
 

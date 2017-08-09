@@ -119,6 +119,13 @@ public enum Events {
 		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
 			return PrivateMessage.parseReply(invoker, args);
 		}
+	}),
+
+	LIST_PLAYERS("ms.player.list", new ChatCommand() {
+		@ChatCommandSyntax(name = "who", description = "Lists the players who are currently in the master server chat.", arguments = "")
+		public Message serializeCommand(Uuid invoker, List<String> args) throws IllegalArgumentException {
+			return PrivateMessage.parseReply(invoker, args);
+		}
 	});
 
 	private final String name;
