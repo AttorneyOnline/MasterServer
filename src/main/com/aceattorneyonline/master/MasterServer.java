@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.aceattorneyonline.master.protocol.AO1ClientProtocolHandler;
 import com.aceattorneyonline.master.protocol.AO2ClientProtocolHandler;
 import com.aceattorneyonline.master.protocol.AOServerProtocolHandler;
+import com.aceattorneyonline.master.protocol.WebClientProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
 import com.aceattorneyonline.master.verticles.ClientListVerticle;
@@ -83,6 +84,7 @@ public class MasterServer {
 		defaultHandler.register(new AO1ClientProtocolHandler());
 		defaultHandler.register(new AO2ClientProtocolHandler());
 		defaultHandler.register(new AOServerProtocolHandler());
+		defaultHandler.register(new WebClientProtocolHandler());
 	}
 
 	private void setupVerticles() {
