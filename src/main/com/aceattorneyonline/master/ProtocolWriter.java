@@ -13,36 +13,36 @@ import java.util.Collection;
 public interface ProtocolWriter {
 
 	/** Sends a single server entry being advertised. */
-	public void sendServerEntry(int number, AdvertisedServer advertiser);
+	void sendServerEntry(int number, AdvertisedServer advertiser);
 
 	/** Sends multiple server entries being advertised. */
-	public void sendServerEntries(Collection<AdvertisedServer> serverList);
+	void sendServerEntries(Collection<AdvertisedServer> serverList);
 
 	/**
 	 * Sends a message as an official communication between the master server and
 	 * the client.
 	 */
-	public void sendSystemMessage(String message);
+	void sendSystemMessage(String message);
 
 	/** Sends a regular chat message. */
-	public void sendChatMessage(String author, String message);
+	void sendChatMessage(String author, String message);
 
 	/** Sends the master server version. */
-	public void sendVersion(String version);
+	void sendVersion(String version);
 
 	/** Sends a pong to a server. */
-	public void sendPong();
+	void sendPong();
 
 	/** Sends a pong error to non-servers. */
-	public void sendPongError();
+	void sendPongError();
 
 	/** Sends a heartbeat success for new advertisers. */
-	public void sendNewHeartbeatSuccess();
+	void sendNewHeartbeatSuccess();
 
 	/** Sends a periodic check to very that the connection is still open. */
-	public void sendConnectionCheck();
+	void sendConnectionCheck();
 	
 	/** Sends a ban notification. */
-	public void sendBanNotification(String message);
+	void sendBanNotification(String message);
 
 }
