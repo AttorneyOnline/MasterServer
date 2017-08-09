@@ -17,6 +17,7 @@ import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
+import com.aceattorneyonline.master.events.SharedEventProtos.GetVersion;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
@@ -60,7 +61,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 		try {
 			packet = packet.substring(0, packet.indexOf('%'));
 		} catch (StringIndexOutOfBoundsException e) {
-			logger.error("{}: Packet without % delimiter! {}", context(), packet);
+			logger.warn("{}: Packet without % delimiter! {}", context(), packet);
 		}
 		List<String> tokens = Arrays.asList(packet.split("#"));
 		EventBus eventBus = MasterServer.vertx.eventBus();
@@ -93,6 +94,11 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 						.setUsername(unescape(tokens.get(1))).setMessage(unescape(tokens.get(2))).build().toByteArray(),
 						this::handleEventReply);
 			}
+			break;
+		case "VC":
+			// Version check: VC#%
+			eventBus.send(Events.GET_VERSION.getEventName(), GetVersion.newBuilder().setId(id).build().toByteArray(),
+					this::handleEventReply);
 			break;
 		default:
 			logger.warn("{} Received unknown message: {}", context(), packet);

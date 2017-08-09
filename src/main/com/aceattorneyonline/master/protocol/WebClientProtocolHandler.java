@@ -1,6 +1,8 @@
 package com.aceattorneyonline.master.protocol;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.java_websocket.WebSocket.Role;
 import org.java_websocket.drafts.Draft.HandshakeState;
@@ -8,6 +10,9 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.exceptions.InvalidDataException;
 import org.java_websocket.exceptions.InvalidHandshakeException;
 import org.java_websocket.framing.Framedata;
+import org.java_websocket.framing.Framedata.Opcode;
+import org.java_websocket.framing.PingFrame;
+import org.java_websocket.framing.PongFrame;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.HandshakeImpl1Server;
 import org.java_websocket.handshake.ServerHandshakeBuilder;
@@ -45,34 +50,34 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 	@SuppressWarnings("deprecation")
 	public void handle(Buffer event) {
 		/*
-		if (event.length() < 6) {
-			logger.debug("Websocket packet is less than 6 bytes long. Ignoring.");
+		 * if (event.length() < 6) {
+		 * logger.debug("Websocket packet is less than 6 bytes long. Ignoring.");
+		 * return; } try { byte[] header = event.getBytes(0, 6); int length = header[1]
+		 * & 127; byte[] body = event.getBytes(6, 6 + length); for (int i = 0; i <
+		 * length; i++) { body[i] ^= header[2 + (i & 3)]; } super.handle(event); if
+		 * (event.length() > length + header.length) { // If we think there are more
+		 * frames inside this packet, try again handle(event.getBuffer(header.length +
+		 * length, event.length())); } } catch (IndexOutOfBoundsException e) {
+		 * logger.debug("Websocket packet was shorter than expected!", e); }
+		 */
+
+		// Don't parse handshakes
+		if (event.toString().startsWith("GET / HTTP/1.1"))
 			return;
-		}
+
+		List<Framedata> frames = new ArrayList<>();
 		try {
-			byte[] header = event.getBytes(0, 6);
-			int length = header[1] & 127;
-			byte[] body = event.getBytes(6, 6 + length);
-			for (int i = 0; i < length; i++) {
-				body[i] ^= header[2 + (i & 3)];
-			}
-			super.handle(event);
-			if (event.length() > length + header.length) {
-				// If we think there are more frames inside this packet, try again
-				handle(event.getBuffer(header.length + length, event.length()));
-			}
-		} catch (IndexOutOfBoundsException e) {
-			logger.debug("Websocket packet was shorter than expected!", e);
-		}
-		*/
-		Buffer payload = Buffer.buffer();
-		try {
-			for (Framedata frame : websocket.translateFrame(event.getByteBuf().nioBuffer())) {
-				payload.appendBuffer(Buffer.buffer(Unpooled.wrappedBuffer(frame.getPayloadData())));
-			}
-			super.handle(payload); // XXX: let's hope the payload isn't incomplete...
+			frames = websocket.translateFrame(event.getByteBuf().nioBuffer());
 		} catch (InvalidDataException e) {
 			logger.debug("Invalid frame received from WebSocket", e);
+		}
+		for (Framedata frame : frames) {
+			if (frame.getOpcode() == Opcode.TEXT || frame.getOpcode() == Opcode.BINARY)
+				// XXX: let's hope the payload isn't incomplete...
+				super.handle(Buffer.buffer(Unpooled.copiedBuffer(frame.getPayloadData())));
+			else if (frame.getOpcode() == Opcode.PING)
+				context().socket().write(Buffer
+						.buffer(Unpooled.wrappedBuffer(websocket.createBinaryFrame(new PongFrame((PingFrame) frame)))));
 		}
 	}
 
