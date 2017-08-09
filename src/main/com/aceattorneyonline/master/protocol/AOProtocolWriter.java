@@ -36,7 +36,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 			.append(version).append("#")
 			.append(port).append("#")
 			.append(name).append("#%");
-		writer.write(Buffer.buffer(packet.toString()));
+		write(packet.toString());
 	}
 
 	@Override
@@ -55,13 +55,13 @@ public class AOProtocolWriter implements ProtocolWriter {
 				.append(port).append("#");
 		}
 		packet.append("%");
-		writer.write(Buffer.buffer(packet.toString()));
+		write(packet.toString());
 	}
 
 	@Override
 	public void sendSystemMessage(String message) {
 		for (String line : message.split("\n")) {
-			writer.write(Buffer.buffer("CT#AOMS#" + sanitize(line) + "#%"));
+			write("CT#AOMS#" + sanitize(line) + "#%");
 		}
 	}
 
@@ -69,41 +69,46 @@ public class AOProtocolWriter implements ProtocolWriter {
 	public void sendChatMessage(String author, String message) {
 		if (author.isEmpty()) {
 			// This method was found in ms.py
-			writer.write(Buffer.buffer("CT#" + sanitize(message) + "\b00##%"));
+			write("CT#" + sanitize(message) + "\b00##%");
 		} else {
-			writer.write(Buffer.buffer("CT#" + sanitize(author) + "#" + sanitize(message) + "#%"));
+			write("CT#" + sanitize(author) + "#" + sanitize(message) + "#%");
 		}
 	}
 
 	@Override
 	public void sendVersion(String version) {
-		writer.write(Buffer.buffer("SV#" + version + "#%"));
+		write("SV#" + version + "#%");
 	}
 
 	@Override
 	public void sendPong() {
-		writer.write(Buffer.buffer("PONG#%"));
+		write("PONG#%");
 	}
 
 	@Override
 	public void sendPongError() {
-		writer.write(Buffer.buffer("NOSERV#%"));
+		write("NOSERV#%");
 	}
 
 	@Override
 	public void sendNewHeartbeatSuccess() {
-		writer.write(Buffer.buffer("PSDD#0#%"));
+		write("PSDD#0#%");
 	}
 	
 	@Override
 	public void sendConnectionCheck() {
-		writer.write(Buffer.buffer("CHECK#%"));
+		write("CHECK#%");
 	}
 	
 	@Override
 	public void sendBanNotification(String message) {
 		sendSystemMessage(message);
-		writer.write(Buffer.buffer("DOOM#%"));
+		write("DOOM#%");
+	}
+
+	@Override
+	public void write(Buffer buffer) {
+		writer.write(buffer);
 	}
 
 	protected String sanitize(String str) {

@@ -2,6 +2,8 @@ package com.aceattorneyonline.master;
 
 import java.util.Collection;
 
+import io.vertx.core.buffer.Buffer;
+
 /**
  * Defines the protocol-specific methods on how commands will be sent back to a
  * client.
@@ -11,6 +13,14 @@ import java.util.Collection;
  * {@link UnsupportedOperationException}.
  */
 public interface ProtocolWriter {
+
+	/** Writes a buffer to the client. */
+	void write(Buffer buffer);
+
+	/** Writes a UTF-8-encoded string to the client. */
+	default void write(String string) {
+		write(Buffer.buffer(string));
+	}
 
 	/** Sends a single server entry being advertised. */
 	void sendServerEntry(int number, AdvertisedServer advertiser);

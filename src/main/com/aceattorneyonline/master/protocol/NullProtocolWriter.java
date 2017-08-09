@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import com.aceattorneyonline.master.AdvertisedServer;
 import com.aceattorneyonline.master.ProtocolWriter;
 
+import io.vertx.core.buffer.Buffer;
+
 public class NullProtocolWriter implements ProtocolWriter {
 
 	private static final Logger logger = LoggerFactory.getLogger(NullProtocolWriter.class);
@@ -60,6 +62,11 @@ public class NullProtocolWriter implements ProtocolWriter {
 	@Override
 	public void sendBanNotification(String message) {
 		logger.debug("Tried to send ban notification to null protocol writer");
+	}
+
+	@Override
+	public void write(Buffer buffer) {
+		logger.debug("Tried to write a buffer to the null protocol writer");
 	}
 
 }
