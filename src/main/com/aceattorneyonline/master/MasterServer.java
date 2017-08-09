@@ -22,6 +22,7 @@ import com.aceattorneyonline.master.verticles.RemoteShell;
 import com.aceattorneyonline.master.verticles.ServerList;
 import com.aceattorneyonline.master.verticles.Version;
 
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServerOptions;
 
@@ -89,14 +90,15 @@ public class MasterServer {
 	}
 
 	private void setupVerticles() {
-		vertx.deployVerticle(NewClientReceiver.class.getName());
-		vertx.deployVerticle(ServerList.class.getName());
-		vertx.deployVerticle(BanList.class.getName());
-		vertx.deployVerticle(Chat.class.getName());
-		vertx.deployVerticle(Motd.class.getName());
-		vertx.deployVerticle(Version.class.getName());
-		vertx.deployVerticle(ListPlayers.class.getName());
-		vertx.deployVerticle(RemoteShell.class.getName());
+		DeploymentOptions worker = new DeploymentOptions().setWorker(true);
+		vertx.deployVerticle(NewClientReceiver.class.getName(), worker);
+		vertx.deployVerticle(ServerList.class.getName(), worker);
+		vertx.deployVerticle(BanList.class.getName(), worker);
+		vertx.deployVerticle(Chat.class.getName(), worker);
+		vertx.deployVerticle(Motd.class.getName(), worker);
+		vertx.deployVerticle(Version.class.getName(), worker);
+		vertx.deployVerticle(ListPlayers.class.getName(), worker);
+		vertx.deployVerticle(RemoteShell.class.getName(), worker);
 	}
 
 	private static void logUncaughtExceptions() {
