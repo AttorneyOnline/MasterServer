@@ -1,53 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration> <!-- logback has no schema, get rid of the warning! -->
 <configuration>
-	<appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<Pattern>%d{YYYY/MM/dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} -
-				%msg%n
-			</Pattern>
-		</encoder>
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>DEBUG</level>
-		</filter>
-	</appender>
+  <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <Pattern>%d{YYYY/MM/dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %n    %msg%n
+      </Pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>DEBUG</level>
+    </filter>
+  </appender>
 
-	<appender name="dailyRollingFileAppender"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<File>logs/daily/masterserver.log</File>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>logs/daily/masterserver.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
-			<maxFileSize>50MB</maxFileSize>
-			<maxHistory>30</maxHistory> <!-- in days -->
-		</rollingPolicy>
+  <appender name="dailyRollingFileAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>logs/daily/masterserver.log</File>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>logs/daily/masterserver.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <maxHistory>30</maxHistory> <!-- in days -->
+    </rollingPolicy>
 
-		<encoder>
-			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg %n
-			</Pattern>
-		</encoder>
-	</appender>
-	<appender name="minuteRollingFileAppender"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>logs/last-30min/masterserver-minute.%d{yyyy-MM-dd_HH-mm}.log
-			</FileNamePattern>
-			<maxHistory>30</maxHistory> <!-- in minutes -->
-		</rollingPolicy>
+    <encoder>
+      <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %n    %msg%n
+      </Pattern>
+    </encoder>
+  </appender>
+  <appender name="simpleDailyRollingFileAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>logs/daily-simple/masterserver.log</File>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>logs/daily-simple/masterserver.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <maxHistory>30</maxHistory> <!-- in days -->
+    </rollingPolicy>
 
-		<encoder>
-			<Pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n
-			</Pattern>
-		</encoder>
-	</appender>
+    <encoder>
+      <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %n    %msg%n
+      </Pattern>
+    </encoder>
+  </appender>
+  <appender name="minuteRollingFileAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>logs/last-30min/masterserver-minute.%d{yyyy-MM-dd_HH-mm}.log
+      </FileNamePattern>
+      <maxHistory>30</maxHistory> <!-- in minutes -->
+    </rollingPolicy>
 
-	<logger name="com.aceattorneyonline" level="debug" additivity="false">
-		<appender-ref ref="dailyRollingFileAppender" />
-		<appender-ref ref="minuteRollingFileAppender" />
-		<appender-ref ref="consoleAppender" />
-	</logger>
+    <encoder>
+      <Pattern>%-4relative [%thread] %-5level %logger{35} - %n    %msg%n
+      </Pattern>
+    </encoder>
+  </appender>
 
-	<root>
-		<level value="DEBUG" />
-		<appender-ref ref="consoleAppender" />
-	</root>
+  <logger name="com.aceattorneyonline" level="info" additivity="false">
+    <appender-ref ref="simpleDailyRollingFileAppender" />
+  </logger>
+
+  <root level="DEBUG">
+    <appender-ref ref="consoleAppender" />
+    <appender-ref ref="dailyRollingFileAppender" />
+    <appender-ref ref="minuteRollingFileAppender" />
+  </root>
 </configuration>
