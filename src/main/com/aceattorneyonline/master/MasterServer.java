@@ -18,6 +18,7 @@ import com.aceattorneyonline.master.verticles.ClientListVerticle;
 import com.aceattorneyonline.master.verticles.ListPlayers;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
+import com.aceattorneyonline.master.verticles.PrivateMessage;
 import com.aceattorneyonline.master.verticles.RemoteShell;
 import com.aceattorneyonline.master.verticles.ServerList;
 import com.aceattorneyonline.master.verticles.Version;
@@ -97,6 +98,7 @@ public class MasterServer {
 		vertx.deployVerticle(Chat.class.getName(), worker);
 		vertx.deployVerticle(Motd.class.getName(), worker);
 		vertx.deployVerticle(Version.class.getName(), worker);
+		vertx.deployVerticle(PrivateMessage.class.getName(), worker);
 		vertx.deployVerticle(ListPlayers.class.getName(), worker);
 		vertx.deployVerticle(RemoteShell.class.getName(), worker);
 	}
