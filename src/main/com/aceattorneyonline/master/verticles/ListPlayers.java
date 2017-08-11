@@ -1,20 +1,14 @@
 package com.aceattorneyonline.master.verticles;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.ChatCommandSyntax;
-import com.aceattorneyonline.master.Player;
-import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos;
-import com.aceattorneyonline.master.events.PlayerEventProtos.ReplyPM;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
