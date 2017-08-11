@@ -38,6 +38,9 @@
       <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %n    %msg%n
       </Pattern>
     </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
   </appender>
   <appender name="minuteRollingFileAppender"
     class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -52,20 +55,11 @@
       </Pattern>
     </encoder>
   </appender>
-  
-  <logger name="com.aceattorneyonline" level="debug" additivity="false">
-    <appender-ref ref="consoleAppender" />
-    <appender-ref ref="dailyRollingFileAppender" />
-    <appender-ref ref="minuteRollingFileAppender" />
-  </logger>
-
-  <logger name="com.aceattorneyonline" level="info" additivity="false">
-    <appender-ref ref="simpleDailyRollingFileAppender" />
-  </logger>
 
   <root level="DEBUG">
     <appender-ref ref="consoleAppender" />
     <appender-ref ref="dailyRollingFileAppender" />
     <appender-ref ref="minuteRollingFileAppender" />
+    <appender-ref ref="simpleDailyRollingFileAppender" />
   </root>
 </configuration>
