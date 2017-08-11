@@ -117,7 +117,7 @@ public class Chat extends ClientListVerticle {
 			} else {
 				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
 				event.reply(null);
-				logger.info("{}: {}", senderId.toString(), message);
+				logger.info("[chat] {}: {}", senderId.toString(), message);
 			}
 			// TODO: anti-flood
 		} catch (InvalidProtocolBufferException e) {

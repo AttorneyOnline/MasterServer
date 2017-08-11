@@ -45,7 +45,7 @@ public class DefaultProtocolHandler implements Handler<NetSocket> {
 	}
 
 	public void handle(NetSocket socket, Buffer buffer) {
-		logger.info("New connection: {}", socket.remoteAddress());
+		logger.debug("New connection: {}", socket.remoteAddress());
 		boolean wait = false;
 		for (ProtocolHandler handler : handlerList) {
 			switch (handler.isCompatible(socket, buffer)) {

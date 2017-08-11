@@ -44,7 +44,7 @@ public class NewClientReceiver extends ClientListVerticle {
 			Player player = getPlayerById(clientId);
 			if (player != null) {
 				player.socket().endHandler(nil -> {
-					logger.info("Dropped {} from client list", player);
+					logger.debug("Dropped {} from client list", player);
 					removePlayer(clientId, player);
 				});
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
@@ -75,7 +75,7 @@ public class NewClientReceiver extends ClientListVerticle {
 			Advertiser advertiser = getAdvertiserById(clientId);
 			if (advertiser != null) {
 				advertiser.socket().endHandler(nil -> {
-					logger.info("Dropped {} from client list", advertiser);
+					logger.info("Dropped {} from advertiser list", advertiser);
 					if (advertiser.server() != null) {
 						advertiser.server().delist();
 					}

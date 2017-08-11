@@ -27,7 +27,7 @@ public class Player extends Client {
 	
 	public void setName(String name) {
 		this.name = name;
-		logger.debug("{}: Set name to {}", this, name);
+		logger.info("{}: Set name to {}", this, name);
 	}
 
 	/**
