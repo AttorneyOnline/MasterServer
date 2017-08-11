@@ -63,6 +63,7 @@ public class ServerList extends ServerListVerticle {
 				for (AdvertisedServer server : getSortedServerList()) {
 					client.protocolWriter().sendServerEntry(curPage++, server);
 				}
+				event.reply(null);
 			} else { 
 				AdvertisedServer server = getSortedServerList().get(pageNo);
 				client.protocolWriter().sendServerEntry(pageNo, server);
