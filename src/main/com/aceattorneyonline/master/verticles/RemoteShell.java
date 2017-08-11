@@ -143,31 +143,39 @@ public class RemoteShell extends AbstractVerticle {
 					uptime.toMinutes() % 60,
 					clv.getClientsList().size(),
 					clv.getAdvertisersList().size());
+			ansi.eraseLine(Ansi.Erase.FORWARD);
 
 			// Print columns
 			ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
-					.format("%36s  %30s  %15s  %11s  %1s  %20s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
-					.a(Ansi.Attribute.NEGATIVE_OFF).newline();
+					.format("%36s  %35s  %18s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
+					.a(Ansi.Attribute.NEGATIVE_OFF).eraseLine(Ansi.Erase.FORWARD).newline();
 			
 
 			boolean showAll = process.commandLine().isFlagEnabled("show-all");
 			boolean showPlayers = process.commandLine().isFlagEnabled("show-players");
 			boolean showServers = process.commandLine().isFlagEnabled("show-servers");
+
+			showAll = !(showPlayers || showServers); // If no special filter, just show all of them.
+
 			int curRow = 3;
 			if (showAll || showPlayers)
 				for (Player player : clv.getPlayersList()) {
 					if (curRow >= process.height() && process.height() > 0) break;
-					ansi.format("%36s  %30s  %15s  %11s  %1s  %20s", player.id(), player.name(), player.address(),
+					ansi.format("%36s  %35s  %18s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
 					ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 				}
 			if (showAll || showServers)
-				for (Advertiser advertiser: clv.getAdvertisersList()) {
+				for (Advertiser advertiser : clv.getAdvertisersList().stream()
+						.sorted((a, b) -> a.server() != null && b.server() != null
+								? a.server().uptime().compareTo(a.server().uptime())
+								: a.id().compareTo(b.id()))
+						.collect(Collectors.toList())) {
 					if (curRow >= process.height() && process.height() > 0) break;
 					AdvertisedServer server = advertiser.server();
 					if (server != null) {
 						Duration advUptime = server.uptime();
-						ansi.format("%36s  %30s  %15s  %02d:%02d:%02d:%02d  %1s  %20s", advertiser.id(), server.name(), server.address(),
+						ansi.format("%36s  %35s  %18s  %02d:%02d:%02d:%02d  %1s  %25s", advertiser.id(), server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
 								advertiser.protocolWriter().getClass().getSimpleName());
 						ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
