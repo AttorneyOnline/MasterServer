@@ -58,9 +58,16 @@ public class ServerList extends ServerListVerticle {
 			Client client = getClientById(id);
 			int pageNo = gslp.getPage();
 			logger.debug("{}: Handling paged get server list event (page {})", client, pageNo);
-			AdvertisedServer server = getSortedServerList().get(pageNo);
-			client.protocolWriter().sendServerEntry(pageNo, server);
-			event.reply(null);
+			if (pageNo == -1) {
+				int curPage = 0;
+				for (AdvertisedServer server : getSortedServerList()) {
+					client.protocolWriter().sendServerEntry(curPage++, server);
+				}
+			} else { 
+				AdvertisedServer server = getSortedServerList().get(pageNo);
+				client.protocolWriter().sendServerEntry(pageNo, server);
+				event.reply(null);
+			}
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerListPaged protobuf");
 		} catch (IndexOutOfBoundsException e) {
@@ -79,6 +86,10 @@ public class ServerList extends ServerListVerticle {
 			if (advertiser != null) {
 				AdvertisedServer server = new AdvertisedServer(advertiser.address(), hb.getPort(), hb.getName(),
 						hb.getDescription(), hb.getVersion());
+				if (getSortedServerList().stream().filter(s -> s.address().equals(server.address())).count() > 0) {
+					// This advertised server already exists! Get that crap outta here!
+					event.fail(EventErrorReason.SECURITY_ERROR, "Advertised server already exists");
+				}
 				advertiser.setServer(server);
 				server.setDelistCallback(new DelistCallback(server));
 				addServer(server);

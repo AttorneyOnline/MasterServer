@@ -121,4 +121,8 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 		player.setProtocolWriter(new WebClientProtocolWriter(player.socket(), websocket));
 		return new WebClientProtocolHandler(player, websocket);
 	}
+
+	protected boolean askForServersAllAtOnce() {
+		return true;
+	}
 }

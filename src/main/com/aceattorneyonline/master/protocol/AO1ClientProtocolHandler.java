@@ -73,7 +73,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 			// But we can hack it and return all servers, and then not accept any SR
 			// requests.
 			eventBus.send(Events.GET_SERVER_LIST_PAGED.getEventName(),
-					GetServerListPaged.newBuilder().setId(id).setPage(0).build().toByteArray(), this::handleEventReply);
+					GetServerListPaged.newBuilder().setId(id).setPage(askForServersAllAtOnce() ? -1 : 0).build().toByteArray(), this::handleEventReply);
 			break;
 		case "SR":
 			// Page of servers: SR#[id]#%
@@ -167,4 +167,11 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 		return new AO1ClientProtocolHandler(player);
 	}
 
+	/**
+	 * Returns whether or not this protocol supports receiving servers all at once
+	 * on an askforservers packet.
+	 */
+	protected boolean askForServersAllAtOnce() {
+		return false;
+	}
 }
