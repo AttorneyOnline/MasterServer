@@ -147,7 +147,7 @@ public class RemoteShell extends AbstractVerticle {
 
 			// Print columns
 			ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
-					.format("%36s  %35s  %18s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
+					.format("%36s  %35s  %24s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
 					.a(Ansi.Attribute.NEGATIVE_OFF).eraseLine(Ansi.Erase.FORWARD).newline();
 			
 
@@ -161,7 +161,7 @@ public class RemoteShell extends AbstractVerticle {
 			if (showAll || showPlayers)
 				for (Player player : clv.getPlayersList()) {
 					if (curRow >= process.height() && process.height() > 0) break;
-					ansi.format("%36s  %35s  %18s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
+					ansi.format("%36s  %35s  %24s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
 					ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 				}
@@ -175,7 +175,7 @@ public class RemoteShell extends AbstractVerticle {
 					AdvertisedServer server = advertiser.server();
 					if (server != null) {
 						Duration advUptime = server.uptime();
-						ansi.format("%36s  %35s  %18s  %02d:%02d:%02d:%02d  %1s  %25s", advertiser.id(), server.name(), server.address(),
+						ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", advertiser.id(), server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
 								advertiser.protocolWriter().getClass().getSimpleName());
 						ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
