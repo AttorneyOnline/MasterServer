@@ -18,6 +18,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.net.SocketAddress;
 
 public class ServerList extends ServerListVerticle {
 
@@ -64,7 +65,7 @@ public class ServerList extends ServerListVerticle {
 					client.protocolWriter().sendServerEntry(curPage++, server);
 				}
 				event.reply(null);
-			} else { 
+			} else {
 				AdvertisedServer server = getSortedServerList().get(pageNo);
 				client.protocolWriter().sendServerEntry(pageNo, server);
 				event.reply(null);
@@ -84,9 +85,10 @@ public class ServerList extends ServerListVerticle {
 			Heartbeat hb = Heartbeat.parseFrom(event.body());
 			UUID id = UUID.fromString(hb.getId().getId());
 			Advertiser advertiser = getAdvertiserById(id);
+			// By not passing the port by value, we end up keeping a strong reference to the heartbeat
+			// protobuf, established by the SocketAddress instantiation.
 			if (advertiser != null) {
-				AdvertisedServer server = new AdvertisedServer(advertiser.address(), hb.getPort(), hb.getName(),
-						hb.getDescription(), hb.getVersion());
+				AdvertisedServer server = new AdvertisedServer(advertiser.address().host(), hb.getPort(), hb.getName(), hb.getDescription(), hb.getVersion());
 				if (getSortedServerList().stream().filter(s -> s.address().equals(server.address())).count() > 0) {
 					// This advertised server already exists! Get that crap outta here!
 					event.fail(EventErrorReason.SECURITY_ERROR, "Advertised server already exists");

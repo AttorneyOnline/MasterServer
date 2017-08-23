@@ -17,8 +17,20 @@ public class AdvertisedServer {
 	private final Instant timeAdded;
 	private DelistCallback delistCallback;
 
-	public AdvertisedServer(SocketAddress address, int port, String name, String description, String version) {
-		this.address = address;
+	public AdvertisedServer(String hostname, int port, String name, String description, String version) {
+		this.address = new SocketAddress() {
+
+				@Override
+				public String host() {
+					return hostname;
+				}
+
+				@Override
+				public int port() {
+					return port;
+				}
+
+		};
 		this.port = port;
 		this.name = name;
 		this.description = description;
