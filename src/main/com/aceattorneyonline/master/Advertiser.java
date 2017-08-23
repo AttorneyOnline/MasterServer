@@ -8,7 +8,7 @@ import io.vertx.core.net.NetSocket;
 /**
  * Represents a server that is being advertised on the master server.
  */
-public class Advertiser extends Client {
+public class Advertiser extends Client implements Comparable<Advertiser> {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Advertiser.class);
 	
@@ -28,6 +28,7 @@ public class Advertiser extends Client {
 		this.server = server;
 	}
 
+	@Override
 	public String toString() {
 		if (server != null) {
 			return String.format("%s - Advertiser - %s", id(), server.toString());
@@ -36,4 +37,12 @@ public class Advertiser extends Client {
 		}
 	}
 
+	@Override
+	public int compareTo(Advertiser a) {
+		if (server() != null && a.server() != null) {
+			return server().uptime().compareTo(a.server().uptime());
+		} else {
+			return id().compareTo(a.id());
+		}
+	}
 }

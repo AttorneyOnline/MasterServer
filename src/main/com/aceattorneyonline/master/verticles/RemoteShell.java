@@ -167,9 +167,7 @@ public class RemoteShell extends AbstractVerticle {
 				}
 			if (showAll || showServers)
 				for (Advertiser advertiser : clv.getAdvertisersList().stream()
-						.sorted((a, b) -> a.server() != null && b.server() != null
-								? a.server().uptime().compareTo(a.server().uptime())
-								: a.id().compareTo(b.id()))
+						.sorted()
 						.collect(Collectors.toList())) {
 					if (curRow >= process.height() && process.height() > 0) break;
 					AdvertisedServer server = advertiser.server();
