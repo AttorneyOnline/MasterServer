@@ -188,6 +188,12 @@ public class RemoteShell extends AbstractVerticle {
 			process.write(ansi().reset().toString());
 			process.end();
 		});
+
+		process.endHandler(handler -> {
+			process.vertx().cancelTimer(id);
+			process.end();
+		});
+
 	}
 
 	/** Check if the terminal size is too small and report an error if there is. */
