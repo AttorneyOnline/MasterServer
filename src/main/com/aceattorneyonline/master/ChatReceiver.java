@@ -10,21 +10,28 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.MessageConsumer;
 
 /**
  * Hooks into a player to receive chat message broadcasts from the event bus.
  */
-public class ChatReceiver implements Handler<Message<byte[]>> {
+public class ChatReceiver implements Handler<Message<byte[]>>, AutoCloseable {
 
 	private static final Logger logger = LoggerFactory.getLogger(ChatReceiver.class);
 
 	private Client client;
+	private MessageConsumer<?> consumer;
 
 	public ChatReceiver(Client client) {
 		this.client = client;
 
 		EventBus eventBus = MasterServer.vertx.eventBus();
-		eventBus.consumer(Events.BROADCAST_CHAT.toString(), this);
+		consumer = eventBus.consumer(Events.BROADCAST_CHAT.toString(), this);
+	}
+
+	@Override
+	public void close() {
+		consumer.unregister();
 	}
 
 	@Override

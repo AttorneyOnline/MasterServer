@@ -45,6 +45,7 @@ public class NewClientReceiver extends ClientListVerticle {
 			if (player != null) {
 				player.socket().endHandler(nil -> {
 					logger.debug("Dropped {} from client list", player);
+					player.onDisconnect();
 					removePlayer(clientId, player);
 				});
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {

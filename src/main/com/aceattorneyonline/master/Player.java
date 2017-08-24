@@ -17,7 +17,6 @@ public class Player extends Client {
 	private boolean admin;
 
 	// This chat receiver is kept here as a strong reference.
-	@SuppressWarnings("unused")
 	private final ChatReceiver chatReceiver;
 	
 	public Player(NetSocket socket)  {
@@ -57,4 +56,9 @@ public class Player extends Client {
 		return admin;
 	}
 
+	/** Called when a player has disconnected from the server. */
+	public void onDisconnect() {
+		if (chatReceiver != null)
+			chatReceiver.close();
+	}
 }
