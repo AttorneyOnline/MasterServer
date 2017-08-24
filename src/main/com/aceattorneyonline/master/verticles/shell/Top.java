@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.stream.Collectors;
 
 import org.fusesource.jansi.Ansi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.AdvertisedServer;
 import com.aceattorneyonline.master.Advertiser;
@@ -15,28 +17,35 @@ import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.verticles.ClientListVerticle;
 
 import io.vertx.core.cli.annotations.Description;
+import io.vertx.core.cli.annotations.Name;
+import io.vertx.core.cli.annotations.Option;
+import io.vertx.core.cli.annotations.Summary;
 import io.vertx.ext.shell.command.AnnotatedCommand;
 import io.vertx.ext.shell.command.CommandProcess;
 
-class Top extends AnnotatedCommand {
-	
+@Name("top")
+@Summary("Displays a realtime table of connected clients")
+public class Top extends AnnotatedCommand {
+
+	private static final Logger logger = LoggerFactory.getLogger(RemoteShell.class);
+
 	boolean showPlayers = false;
 	boolean showServers = false;
 	boolean showAll = false;
 
-	@io.vertx.core.cli.annotations.Option(shortName = "p", argName = "show-players", required = false)
+	@Option(shortName = "p", argName = "show-players", required = false)
 	@Description("Include players in the client list")
 	public void setShowPlayers(boolean showPlayers) {
 		this.showPlayers = showPlayers;
 	}
 
-	@io.vertx.core.cli.annotations.Option(shortName = "s", argName = "show-servers", required = false)
+	@Option(shortName = "s", argName = "show-servers", required = false)
 	@Description("Include advertised servers in the client list")
 	public void setShowServers(boolean showServers) {
 		this.showServers = showServers;
 	}
 
-	@io.vertx.core.cli.annotations.Option(shortName = "a", argName = "show-all", required = false)
+	@Option(shortName = "a", argName = "show-all", required = false)
 	@Description("Include all clients in the client list")
 	public void setShowAll(boolean showAll) {
 		this.showAll = showAll;
@@ -67,11 +76,6 @@ class Top extends AnnotatedCommand {
 			ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
 					.format("%36s  %35s  %24s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
 					.a(Ansi.Attribute.NEGATIVE_OFF).eraseLine(Ansi.Erase.FORWARD).newline();
-			
-
-			boolean showAll = process.commandLine().isFlagEnabled("show-all");
-			boolean showPlayers = process.commandLine().isFlagEnabled("show-players");
-			boolean showServers = process.commandLine().isFlagEnabled("show-servers");
 
 			showAll = !(showPlayers || showServers); // If no special filter, just show all of them.
 

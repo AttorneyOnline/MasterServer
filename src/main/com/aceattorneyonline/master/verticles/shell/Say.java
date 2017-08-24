@@ -10,6 +10,7 @@ import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 
+import io.vertx.core.cli.annotations.Argument;
 import io.vertx.core.cli.annotations.Description;
 import io.vertx.core.cli.annotations.Name;
 import io.vertx.core.cli.annotations.Summary;
@@ -19,10 +20,10 @@ import io.vertx.ext.shell.command.CommandProcess;
 
 @Name("say")
 @Summary("Sends a message to the server chat")
-class Say extends AnnotatedCommand {
+public class Say extends AnnotatedCommand {
 	private static final Logger logger = LoggerFactory.getLogger(AnnotatedCommand.class);
 
-	@io.vertx.core.cli.annotations.Argument(index = 0, argName = "message", required = true)
+	@Argument(index = 0, argName = "message", required = true)
 	@Description("The chat message to send")
 	public void setMessage(String message) {
 		// Not actually used - it could be multiple words, so we put the args together
