@@ -35,7 +35,7 @@ public class VerticleRedeploy extends AnnotatedCommand {
 				process.write(String.format("Undeployed %s (%s)...\n", id, name));
 				vertx.deployVerticle(name, result2 -> {
 					if (result2.succeeded()) {
-						process.write(String.format("Redeployed %s successfully.\n", name));
+						process.write(String.format("Redeployed %s successfully.\n", name)).end();
 					} else {
 						process.write(String.format("Could not redeploy %s!", id));
 						StringWriter buf = new StringWriter();
