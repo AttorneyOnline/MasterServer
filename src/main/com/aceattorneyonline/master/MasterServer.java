@@ -19,9 +19,9 @@ import com.aceattorneyonline.master.verticles.ListPlayers;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
 import com.aceattorneyonline.master.verticles.PrivateMessage;
-import com.aceattorneyonline.master.verticles.RemoteShell;
 import com.aceattorneyonline.master.verticles.ServerList;
 import com.aceattorneyonline.master.verticles.Version;
+import com.aceattorneyonline.master.verticles.shell.RemoteShell;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
