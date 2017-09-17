@@ -92,6 +92,7 @@ public class ServerList extends ServerListVerticle {
 				if (getSortedServerList().stream().filter(s -> s.address().equals(server.address())).count() > 0) {
 					// This advertised server already exists! Get that crap outta here!
 					event.fail(EventErrorReason.SECURITY_ERROR, "Advertised server already exists");
+					return;
 				}
 				advertiser.setServer(server);
 				server.setDelistCallback(new DelistCallback(server));
