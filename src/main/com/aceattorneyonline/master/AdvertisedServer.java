@@ -10,6 +10,7 @@ import io.vertx.core.net.SocketAddress;
 /** Represents a server being advertised, perhaps by an advertiser. */
 public class AdvertisedServer {
 	private final SocketAddress address;
+	private final String hostname;
 	private final int port;
 	private final String name;
 	private final String description;
@@ -18,24 +19,37 @@ public class AdvertisedServer {
 	private DelistCallback delistCallback;
 
 	public AdvertisedServer(String hostname, int port, String name, String description, String version) {
-		this.address = new SocketAddress() {
-
-				@Override
-				public String host() {
-					return hostname;
-				}
-
-				@Override
-				public int port() {
-					return port;
-				}
-
-		};
+		this.address = new ServerAddress();
+		this.hostname = hostname;
 		this.port = port;
 		this.name = name;
 		this.description = description;
 		this.version = version;
 		this.timeAdded = Instant.now();
+	}
+
+	private class ServerAddress implements SocketAddress {
+
+		@Override
+		public String host() {
+			return hostname;
+		}
+
+		@Override
+		public int port() {
+			return port;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o != null && o.getClass().equals(getClass())) {
+				SocketAddress otherAddress = (SocketAddress) o;
+				return host() != null && otherAddress.host() != null
+						&& host().equals(otherAddress.host())
+						&& port() == otherAddress.port();
+			}
+			return false;
+		}
 	}
 
 	public SocketAddress address() {
