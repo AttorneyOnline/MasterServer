@@ -53,7 +53,7 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	}
 
 	public String address() {
-		return String.format("{}:{}", hostname, port);
+		return String.format("%s:%d", hostname, port);
 	}
 
 	public String host() {
