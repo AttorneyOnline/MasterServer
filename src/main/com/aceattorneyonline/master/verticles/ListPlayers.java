@@ -10,10 +10,11 @@ import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class ListPlayers extends ClientListVerticle {
+public class ListPlayers extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(ListPlayers.class);
 
@@ -30,7 +31,7 @@ public class ListPlayers extends ClientListVerticle {
 	}
 
 	public void handleListPlayers(Message<byte[]> event) {
-		ClientListVerticle clv = ClientListVerticle.getSingleton();
+		ClientServerList clv = ClientServerList.getSingleton();
 		String list = clv.getPlayersList().stream()
 				.filter(p -> !p.name().isEmpty() && !p.isSystem()).map(p -> p.name())
 				.collect(Collectors.joining(", "));

@@ -17,10 +17,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import inet.ipaddr.IPAddress;
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class NewClientReceiver extends ClientListVerticle {
+public class NewClientReceiver extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(NewClientReceiver.class);
 
@@ -41,12 +42,13 @@ public class NewClientReceiver extends ClientListVerticle {
 		try {
 			NewPlayer newPlayer = NewPlayer.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newPlayer.getId().getId());
-			Player player = getPlayerById(clientId);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player player = masterList.getPlayerById(clientId);
 			if (player != null) {
 				player.socket().endHandler(nil -> {
 					logger.debug("Dropped {} from client list", player);
 					player.onDisconnect();
-					removePlayer(clientId, player);
+					masterList.removePlayer(clientId, player);
 				});
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
 					event.reply(reply.result().body() + "\n" + addUserSpecificMessage(player));
@@ -73,14 +75,13 @@ public class NewClientReceiver extends ClientListVerticle {
 		try {
 			NewAdvertiser newAdvertiser = NewAdvertiser.parseFrom(event.body());
 			UUID clientId = UUID.fromString(newAdvertiser.getId().getId());
-			Advertiser advertiser = getAdvertiserById(clientId);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Advertiser advertiser = masterList.getAdvertiserById(clientId);
 			if (advertiser != null) {
 				advertiser.socket().endHandler(nil -> {
 					logger.info("Dropped {} from advertiser list", advertiser);
-					if (advertiser.server() != null) {
-						advertiser.server().delist();
-					}
-					removeAdvertiser(clientId, advertiser);
+					advertiser.onDisconnect();
+					masterList.removeAdvertiser(clientId, advertiser);
 				});
 				event.reply(null);
 			} else {

@@ -24,10 +24,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import inet.ipaddr.IPAddress;
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class BanList extends ClientListVerticle {
+public class BanList extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(BanList.class);
 
@@ -60,7 +61,8 @@ public class BanList extends ClientListVerticle {
 		try {
 			BanPlayer ban = BanPlayer.parseFrom(event.body());
 			UUID id = UUID.fromString(ban.getId().getId());
-			Player requestingPlayer = getPlayerById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player requestingPlayer = masterList.getPlayerById(id);
 			String targetText = ban.getTarget();
 
 			logger.info("{}: User is requesting to ban {}", id.toString(), targetText);
@@ -79,7 +81,7 @@ public class BanList extends ClientListVerticle {
 			// difficult to ban in general, as one would have to look up the real IP address
 			// of the attacker.
 			Player target;
-			Collection<Player> targets = searchPlayerByNameFuzzy(targetText);
+			Collection<Player> targets = masterList.searchPlayerByNameFuzzy(targetText);
 			int targetsSize = targets.size();
 			if (targetsSize > 1) {
 				event.fail(EventErrorReason.USER_ERROR, "Ambiguous result; please refine your search.");
@@ -97,7 +99,7 @@ public class BanList extends ClientListVerticle {
 				if (address != null) {
 					String addressString = address.toCanonicalString();
 					// Find clients that match this IP address and kick them
-					Collection<Client> onlineMatchingClients = searchClientByAddress(addressString);
+					Collection<Client> onlineMatchingClients = masterList.searchClientByAddress(addressString);
 					String banName = "";
 					for (Client matchingClient : onlineMatchingClients) {
 						if (matchingClient instanceof Player) {
@@ -140,7 +142,8 @@ public class BanList extends ClientListVerticle {
 		try {
 			UnbanPlayer ban = UnbanPlayer.parseFrom(event.body());
 			UUID id = UUID.fromString(ban.getId().getId());
-			Player requestingPlayer = getPlayerById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player requestingPlayer = masterList.getPlayerById(id);
 			String targetText = ban.getTarget();
 
 			logger.info("{}: User is requesting to unban {}", requestingPlayer, targetText);

@@ -26,10 +26,11 @@ import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class Motd extends ClientListVerticle {
+public class Motd extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Motd.class);
 
@@ -63,8 +64,9 @@ public class Motd extends ClientListVerticle {
 		try {
 			SetMotd setMotd = SetMotd.parseFrom(event.body());
 			UUID id = UUID.fromString(setMotd.getId().getId());
+			ClientServerList masterList = ClientServerList.getSingleton();
 			String newMessage = setMotd.getMessage();
-			Player requestingPlayer = getPlayerById(id);
+			Player requestingPlayer = masterList.getPlayerById(id);
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
@@ -95,7 +97,8 @@ public class Motd extends ClientListVerticle {
 		try {
 			ReloadMotd reload = ReloadMotd.parseFrom(event.body());
 			UUID id = UUID.fromString(reload.getId().getId());
-			Player requestingPlayer = getPlayerById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player requestingPlayer = masterList.getPlayerById(id);
 
 			if (requestingPlayer == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
@@ -150,23 +153,24 @@ public class Motd extends ClientListVerticle {
 				long days = uptime.toDays(), hours = uptime.toHours() % 24, minutes = uptime.toMinutes() % 60,
 						totalSeconds = uptime.getSeconds();
 				Formatter formatter = new Formatter();
-				if (totalSeconds < 60)
+				if (totalSeconds < 60) {
 					// Don't print seconds except if the master server has only been up for a very
 					// short amount of time.
 					formatter.format("%d seconds", totalSeconds);
-				else {
+				} else {
 					if (days > 0)
-						formatter.format("%d day%s ", days, days > 1 ? "s" : "");
-					if (hours > 0)
-						formatter.format("%d hour%s ", hours, hours > 1 ? "s" : "");
-					if (minutes > 0)
-						formatter.format("%d minute%s", minutes, minutes > 1 ? "s" : "");
+						formatter.format("%d day%s ", days, days != 1 ? "s" : "");
+					if (hours > 0 && days < 7)
+						formatter.format("%d hour%s ", hours, hours != 1 ? "s" : "");
+					if (minutes > 0 && days < 1)
+						formatter.format("%d minute%s", minutes, minutes != 1 ? "s" : "");
 				}
 				String out = formatter.toString();
 				formatter.close();
 				return out;
 			});
-			macros.put("players-online", () -> String.valueOf(ClientListVerticle.getSingleton().getNamedPlayerCount()));
+			macros.put("players-online", () -> String.valueOf(ClientServerList.getSingleton().getNamedPlayerCount()));
+			macros.put("players", () -> String.valueOf(ClientServerList.getSingleton().getPlayerCount()));
 		}
 
 		/**
@@ -176,6 +180,8 @@ public class Motd extends ClientListVerticle {
 		 * <li><code>${uptime}</code></li>
 		 * <li><code>${players-online}</code> - the number of players with names that
 		 * are currently online, excluding system clients</li>
+		 * <li><code>${players}</code> - the number of clients currently connected
+		 * to the master server, excluding advertisers and system clients</li> 
 		 * </ul>
 		 */
 		public static String preprocess(String motd) {

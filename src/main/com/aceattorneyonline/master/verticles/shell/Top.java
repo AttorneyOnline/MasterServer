@@ -4,17 +4,15 @@ import static org.fusesource.jansi.Ansi.ansi;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.stream.Collectors;
 
 import org.fusesource.jansi.Ansi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.AdvertisedServer;
-import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.vertx.core.cli.annotations.Description;
 import io.vertx.core.cli.annotations.Name;
@@ -53,9 +51,12 @@ public class Top extends AnnotatedCommand {
 
 	@Override
 	public void process(CommandProcess process) {
+		logger.info("Starting process top (show-players={}, show-servers={}, show-all={})",
+				showPlayers, showServers, showAll);
+
 		if (RemoteShell.checkTermSizeError(process)) return;
 
-		ClientListVerticle clv = ClientListVerticle.getSingleton();
+		ClientServerList masterList = ClientServerList.getSingleton();
 		long id = process.vertx().setPeriodic(1000, handler -> {
 			if (RemoteShell.checkTermSizeError(process)) return;
 			StringBuilder builder = new StringBuilder();
@@ -68,8 +69,8 @@ public class Top extends AnnotatedCommand {
 					uptime.toDays(),
 					uptime.toHours() % 24,
 					uptime.toMinutes() % 60,
-					clv.getClientsList().size(),
-					clv.getAdvertisersList().size());
+					masterList.getClientsList().size(),
+					masterList.getSortedServerList().size());
 			ansi.eraseLine(Ansi.Erase.FORWARD);
 
 			// Print columns
@@ -81,23 +82,20 @@ public class Top extends AnnotatedCommand {
 
 			int curRow = 3;
 			if (showAll || showPlayers)
-				for (Player player : clv.getPlayersList()) {
+				for (Player player : masterList.getPlayersList()) {
 					if (curRow >= process.height() && process.height() > 0) break;
 					ansi.format("%36s  %35s  %24s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
 					ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 				}
 			if (showAll || showServers)
-				for (Advertiser advertiser : clv.getAdvertisersList().stream()
-						.sorted()
-						.collect(Collectors.toList())) {
+				for (AdvertisedServer server : masterList.getSortedServerList()) {
 					if (curRow >= process.height() && process.height() > 0) break;
-					AdvertisedServer server = advertiser.server();
 					if (server != null) {
 						Duration advUptime = server.uptime();
-						ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", advertiser.id(), server.name(), server.address(),
+						ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", "", server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
-								advertiser.protocolWriter().getClass().getSimpleName());
+								"Server");
 						ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
 					}
 				}

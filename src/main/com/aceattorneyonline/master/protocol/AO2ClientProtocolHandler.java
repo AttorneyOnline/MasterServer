@@ -14,7 +14,7 @@ import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
@@ -85,7 +85,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 	@Override
 	public ProtocolHandler registerClient(NetSocket socket) {
 		Player player = new Player(socket);
-		ClientListVerticle.getSingleton().addPlayer(player.id(), player);
+		ClientServerList.getSingleton().addPlayer(player.id(), player);
 		player.setProtocolWriter(new AO2ProtocolWriter(player.socket()));
 		return new AO2ClientProtocolHandler(player);
 	}

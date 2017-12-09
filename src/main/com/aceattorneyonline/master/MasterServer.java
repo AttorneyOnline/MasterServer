@@ -14,12 +14,12 @@ import com.aceattorneyonline.master.protocol.AOServerProtocolHandler;
 import com.aceattorneyonline.master.protocol.WebClientProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 import com.aceattorneyonline.master.verticles.ListPlayers;
 import com.aceattorneyonline.master.verticles.Motd;
 import com.aceattorneyonline.master.verticles.NewClientReceiver;
 import com.aceattorneyonline.master.verticles.PrivateMessage;
-import com.aceattorneyonline.master.verticles.ServerList;
+import com.aceattorneyonline.master.verticles.Servers;
 import com.aceattorneyonline.master.verticles.Version;
 import com.aceattorneyonline.master.verticles.shell.RemoteShell;
 
@@ -71,7 +71,7 @@ public class MasterServer {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    public void run() {
 		        try {
-		        	for (Player player : ClientListVerticle.getSingleton().getPlayersList()) {
+		        	for (Player player : ClientServerList.getSingleton().getPlayersList()) {
 		        		player.protocolWriter().sendSystemMessage("Master server is restarting.");
 		        	}
 					mainThread.join();
@@ -93,7 +93,7 @@ public class MasterServer {
 	private void setupVerticles() {
 		DeploymentOptions worker = new DeploymentOptions().setWorker(true);
 		vertx.deployVerticle(NewClientReceiver.class.getName(), worker);
-		vertx.deployVerticle(ServerList.class.getName(), worker);
+		vertx.deployVerticle(Servers.class.getName(), worker);
 		vertx.deployVerticle(BanList.class.getName(), worker);
 		vertx.deployVerticle(Chat.class.getName(), worker);
 		vertx.deployVerticle(Motd.class.getName(), worker);

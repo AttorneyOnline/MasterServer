@@ -17,7 +17,7 @@ import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
@@ -57,17 +57,22 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 			if (tokens.size() >= 4) {
 				String version = tokens.size() >= 5 ? tokens.get(4) : "VANILLA";
 				eventBus.send(Events.ADVERTISER_HEARTBEAT.getEventName(),
-						Heartbeat.newBuilder().setId(id).setPort(Integer.parseInt(tokens.get(1))).setName(unescape(tokens.get(2)))
-								.setDescription(unescape(tokens.get(3))).setVersion(version).build().toByteArray(),
-						reply -> {
-							if (reply.succeeded()) {
-								logger.debug("{}: Sent new heartbeat success", context());
-								context().protocolWriter().sendNewHeartbeatSuccess();
-							} else {
-								logger.warn("{}: Advertiser dropped due to heartbeat event failure", context());
-								context().socket().close();
-							}
-						});
+					Heartbeat.newBuilder()
+						.setId(id)
+						.setPort(Integer.parseInt(tokens.get(1)))
+						.setName(unescape(tokens.get(2)))
+						.setDescription(unescape(tokens.get(3)))
+						.setVersion(version).build()
+						.toByteArray(),
+					reply -> {
+						if (reply.succeeded()) {
+							logger.debug("{}: Sent new heartbeat success", context());
+							context().protocolWriter().sendNewHeartbeatSuccess();
+						} else {
+							logger.warn("{}: Heartbeat error: {}", context(), reply.cause());
+							context().socket().close();
+						}
+					});
 			}
 			break;
 		case "PING":
@@ -132,7 +137,8 @@ public class AOServerProtocolHandler extends ContextualProtocolHandler {
 	@Override
 	public ProtocolHandler registerClient(NetSocket socket) {
 		Advertiser advertiser = new Advertiser(socket);
-		ClientListVerticle.getSingleton().addAdvertiser(advertiser.id(), advertiser);
+		ClientServerList masterList = ClientServerList.getSingleton();
+		masterList.addAdvertiser(advertiser.id(), advertiser);
 		advertiser.setProtocolWriter(new AOProtocolWriter(advertiser.socket()));
 		return new AOServerProtocolHandler(advertiser);
 	}

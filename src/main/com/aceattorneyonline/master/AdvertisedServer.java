@@ -2,58 +2,53 @@ package com.aceattorneyonline.master;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.aceattorneyonline.master.verticles.ServerList.DelistCallback;
-
-import io.vertx.core.net.SocketAddress;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 /** Represents a server being advertised, perhaps by an advertiser. */
-public class AdvertisedServer {
-	private final SocketAddress address;
+public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	private final String hostname;
 	private final int port;
-	private final String name;
-	private final String description;
-	private final String version;
-	private final Instant timeAdded;
-	private DelistCallback delistCallback;
 
-	public AdvertisedServer(String hostname, int port, String name, String description, String version) {
-		this.address = new ServerAddress();
+	private ServerInfo info;
+
+	private final Instant timeAdded;
+
+	private Set<Advertiser> advertisers = new HashSet<>();
+
+	public AdvertisedServer(String hostname, int port, ServerInfo info, Advertiser advertiser) {
 		this.hostname = hostname;
 		this.port = port;
-		this.name = name;
-		this.description = description;
-		this.version = version;
+		this.info = info;
 		this.timeAdded = Instant.now();
+		this.advertisers.add(advertiser);
 	}
 
-	private class ServerAddress implements SocketAddress {
+	/** Adds an advertiser that is currently advertising this server. */
+	public void addAdvertiser(Advertiser advertiser) {
+		advertisers.add(advertiser);
+	}
 
-		@Override
-		public String host() {
-			return hostname;
-		}
-
-		@Override
-		public int port() {
-			return port;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (o != null && o.getClass().equals(getClass())) {
-				SocketAddress otherAddress = (SocketAddress) o;
-				return host() != null && otherAddress.host() != null
-						&& host().equals(otherAddress.host())
-						&& port() == otherAddress.port();
-			}
-			return false;
+	/**
+	 * Removes an advertiser, and if there are no advertisers left,
+	 * calls the delist callback.
+	 */
+	public void removeAdvertiser(Advertiser advertiser) {
+		advertisers.remove(advertiser);
+		if (advertisers.isEmpty()) {
+			// TODO: maybe wait a while before delisting?
+			delist();
 		}
 	}
 
-	public SocketAddress address() {
-		return address;
+	public String address() {
+		return String.format("{}:{}", hostname, port);
+	}
+
+	public String host() {
+		return hostname;
 	}
 
 	public int port() {
@@ -61,31 +56,48 @@ public class AdvertisedServer {
 	}
 
 	public String name() {
-		return name;
+		return info.getName();
 	}
 
 	public String description() {
-		return description;
+		return info.getDescription();
 	}
 
 	public String version() {
-		return version;
+		return info.getVersion();
 	}
 
 	public Duration uptime() {
 		return Duration.between(timeAdded, Instant.now());
 	}
 
-	public void setDelistCallback(DelistCallback delist) {
-		this.delistCallback = delist;
+	public void setInfo(ServerInfo info) {
+		this.info = info;
 	}
 
-	public void delist() {
-		delistCallback.delist();
+	private void delist() {
+		ClientServerList masterList = ClientServerList.getSingleton();
+		masterList.removeServer(this);
 	}
 
 	public String toString() {
-		return String.format("Server (%s) - %s - %s:%d", version(), name(), address().host(), port());
+		return String.format("%s [version %s][uptime %s:%d]", name(), version(), hostname, port);
+	}
+
+	public boolean addressEquals(AdvertisedServer o) {
+			return host() != null && o.host() != null
+					&& host().equals(o.host())
+					&& port() == o.port();
+	}
+
+	@Override
+	public int compareTo(AdvertisedServer o) {
+		int uptime = uptime().compareTo(o.uptime());
+		if (uptime == 0) {
+			return name().compareTo(o.name());
+		} else {
+			return uptime;
+		}
 	}
 
 }

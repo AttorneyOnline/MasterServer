@@ -15,7 +15,7 @@ public interface ProtocolHandler extends Handler<Buffer> {
 	 * @param event  the first packet received from the socket
 	 * @return whether or not the handshake was successful
 	 */
-	public abstract CompatibilityResult isCompatible(NetSocket socket, Buffer event);
+	CompatibilityResult isCompatible(NetSocket socket, Buffer event);
 
 	/**
 	 * Creates a new protocol handler, but with a socket actually attached to it
@@ -23,6 +23,6 @@ public interface ProtocolHandler extends Handler<Buffer> {
 	 * @param client  the new client
 	 * @return new instance of ProtocolHandler of identical type
 	 */
-	public ProtocolHandler registerClient(NetSocket socket);
+	ProtocolHandler registerClient(NetSocket socket);
 
 }

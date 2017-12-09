@@ -24,7 +24,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 
 	@Override
 	public void sendServerEntry(int number, AdvertisedServer advertiser) {
-		String ip = advertiser.address().host();
+		String ip = advertiser.host();
 		int port = advertiser.port();
 		String name = sanitize(advertiser.name());
 		String version = advertiser.version();
@@ -46,7 +46,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 		StringBuilder packet = new StringBuilder();
 		packet.append("ALL#");
 		for (AdvertisedServer advertiser : advertisers) {
-			String ip = advertiser.address().host();
+			String ip = advertiser.host();
 			int port = advertiser.port();
 			String name = sanitize(advertiser.name());
 			String desc = sanitize(advertiser.description());

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.aceattorneyonline.master.AdvertisedServer;
 import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
+import com.aceattorneyonline.master.ServerInfo;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
 import com.aceattorneyonline.master.events.EventErrorReason;
@@ -16,13 +17,13 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerList;
 import com.aceattorneyonline.master.events.PlayerEventProtos.GetServerListPaged;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.net.SocketAddress;
 
-public class ServerList extends ServerListVerticle {
+public class Servers extends AbstractVerticle {
 
-	private static final Logger logger = LoggerFactory.getLogger(ServerList.class);
+	private static final Logger logger = LoggerFactory.getLogger(Servers.class);
 
 	@Override
 	public void start() {
@@ -43,9 +44,10 @@ public class ServerList extends ServerListVerticle {
 		try {
 			GetServerList gsl = GetServerList.parseFrom(event.body());
 			UUID id = UUID.fromString(gsl.getId().getId());
-			Client client = getClientById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Client client = masterList.getClientById(id);
 			logger.debug("{}: Handling get server list event", client);
-			client.protocolWriter().sendServerEntries(getSortedServerList());
+			client.protocolWriter().sendServerEntries(masterList.getSortedServerList());
 			event.reply(null);
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse GetServerList protobuf");
@@ -56,17 +58,18 @@ public class ServerList extends ServerListVerticle {
 		try {
 			GetServerListPaged gslp = GetServerListPaged.parseFrom(event.body());
 			UUID id = UUID.fromString(gslp.getId().getId());
-			Client client = getClientById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Client client = masterList.getClientById(id);
 			int pageNo = gslp.getPage();
 			logger.debug("{}: Handling paged get server list event (page {})", client, pageNo);
 			if (pageNo == -1) {
 				int curPage = 0;
-				for (AdvertisedServer server : getSortedServerList()) {
+				for (AdvertisedServer server : masterList.getSortedServerList()) {
 					client.protocolWriter().sendServerEntry(curPage++, server);
 				}
 				event.reply(null);
 			} else {
-				AdvertisedServer server = getSortedServerList().get(pageNo);
+				AdvertisedServer server = masterList.getSortedServerList().get(pageNo);
 				client.protocolWriter().sendServerEntry(pageNo, server);
 				event.reply(null);
 			}
@@ -84,19 +87,14 @@ public class ServerList extends ServerListVerticle {
 		try {
 			Heartbeat hb = Heartbeat.parseFrom(event.body());
 			UUID id = UUID.fromString(hb.getId().getId());
-			Advertiser advertiser = getAdvertiserById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Advertiser advertiser = masterList.getAdvertiserById(id);
 			// By not passing the port by value, we end up keeping a strong reference to the heartbeat
 			// protobuf, established by the SocketAddress instantiation.
 			if (advertiser != null) {
-				AdvertisedServer server = new AdvertisedServer(advertiser.address().host(), hb.getPort(), hb.getName(), hb.getDescription(), hb.getVersion());
-				if (getSortedServerList().stream().filter(s -> s.address().equals(server.address())).count() > 0) {
-					// This advertised server already exists! Get that crap outta here!
-					event.fail(EventErrorReason.SECURITY_ERROR, "Advertised server already exists");
-					return;
-				}
-				advertiser.setServer(server);
-				server.setDelistCallback(new DelistCallback(server));
-				addServer(server);
+				ServerInfo info = new ServerInfo(hb.getName(), hb.getDescription(), hb.getVersion());
+				AdvertisedServer server = masterList.addServer(advertiser, hb.getPort(), info);
+				advertiser.setServer(server);				
 				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Client is not an advertiser");
@@ -110,7 +108,8 @@ public class ServerList extends ServerListVerticle {
 		try {
 			Ping ping = Ping.parseFrom(event.body());
 			UUID id = UUID.fromString(ping.getId().getId());
-			Advertiser advertiser = getAdvertiserById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Advertiser advertiser = masterList.getAdvertiserById(id);
 			if (advertiser != null && advertiser.server() != null) {
 				advertiser.protocolWriter().sendPong();
 				event.reply(null);
@@ -120,19 +119,6 @@ public class ServerList extends ServerListVerticle {
 			}
 		} catch (InvalidProtocolBufferException e) {
 			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse Ping protobuf");
-		}
-	}
-
-	public class DelistCallback {
-		private AdvertisedServer server;
-
-		public DelistCallback(AdvertisedServer server) {
-			this.server = server;
-		}
-
-		public void delist() {
-			logger.debug("Delisted {} from server list", server);
-			removeServer(server);
 		}
 	}
 

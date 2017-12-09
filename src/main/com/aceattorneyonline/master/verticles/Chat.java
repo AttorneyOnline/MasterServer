@@ -21,11 +21,12 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 
-public class Chat extends ClientListVerticle {
+public class Chat extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Chat.class);
 
@@ -50,34 +51,31 @@ public class Chat extends ClientListVerticle {
 			SendChat chat = SendChat.parseFrom(event.body());
 			Uuid senderProtoId = chat.getId();
 			UUID senderId = UUID.fromString(senderProtoId.getId());
-			Player sender = getPlayerById(senderId);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player sender = masterList.getPlayerById(senderId);
 			String senderName = chat.getUsername();
 			String message = chat.getMessage().trim();
 
+			boolean sendMessage = false;
 			if (message.length() > 1500) {
 				event.fail(EventErrorReason.SECURITY_ERROR,
-						"Your message was too long. Could we tone it down?\nRecovered message:\n" + message);
+						"Your message was too long. Could we tone it down?");
 			} else if (sender == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
-			} else if (sender.name() == null || sender.name().isEmpty()) {
+			} else if (sender.name() == null || sender.name().isEmpty() || !senderName.equals(sender.name())) {
 				if (senderName == null || senderName.isEmpty()) {
 					event.fail(EventErrorReason.SECURITY_ERROR, "You cannot use an empty name.");
 					return;
 				}
 				boolean nameChanged = false;
-				while (!searchPlayerByNameExact(senderName).isEmpty()) {
+				while (!masterList.searchPlayerByNameExact(senderName).isEmpty()) {
 					senderName += " - Copy";
 				}
 				if (nameChanged) {
 					event.reply("This name is already taken. Your name has been changed to " + senderName);
 				}
 				sender.setName(senderName);
-			}
-			if (!senderName.equals(sender.name())) {
-				logger.warn("{} tried to send a message with a different name ({})!", sender, senderName);
-				event.fail(EventErrorReason.SECURITY_ERROR, "You cannot send chat messages with a name other than \""
-						+ sender.name() + "\" unless you change it.");
-				// TODO make !name command to change one's name
+				sendMessage = true;
 			} else if (message.isEmpty()) {
 				logger.warn("{} tried to send an empty message!", sender);
 				event.reply(null);
@@ -115,6 +113,9 @@ public class Chat extends ClientListVerticle {
 					event.fail(EventErrorReason.USER_ERROR, "Command not found: " + commandName);
 				}
 			} else {
+				sendMessage = true;
+			}
+			if (sendMessage) {
 				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
 				event.reply(null);
 				logger.info("[chat] {}: {}", senderId.toString(), message);

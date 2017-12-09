@@ -1,7 +1,7 @@
 package com.aceattorneyonline.master.verticles.shell;
 
 import com.aceattorneyonline.master.Player;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.SocketAddressImpl;
@@ -46,7 +46,7 @@ class ShellPlayer extends Player {
 	public static ShellPlayer getSingleton() {
 		if (singleton == null) {
 			singleton = new ShellPlayer();
-			ClientListVerticle.getSingleton().addPlayer(singleton.id(), singleton);
+			ClientServerList.getSingleton().addPlayer(singleton.id(), singleton);
 		}
 		return singleton;
 	}
@@ -57,7 +57,7 @@ class ShellPlayer extends Player {
 	public static void destroySingleton() {
 		if (singleton != null) {
 			singleton.onDisconnect();
-			ClientListVerticle.getSingleton().removePlayer(singleton.id(), singleton);
+			ClientServerList.getSingleton().removePlayer(singleton.id(), singleton);
 			singleton = null;
 		}
 	}

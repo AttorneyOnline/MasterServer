@@ -19,7 +19,7 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
 import com.aceattorneyonline.master.events.PlayerEventProtos.SendChat;
 import com.aceattorneyonline.master.events.SharedEventProtos.GetVersion;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
@@ -162,7 +162,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 	@Override
 	public ProtocolHandler registerClient(NetSocket socket) {
 		Player player = new Player(socket);
-		ClientListVerticle.getSingleton().addPlayer(player.id(), player);
+		ClientServerList.getSingleton().addPlayer(player.id(), player);
 		player.setProtocolWriter(new AOProtocolWriter(player.socket()));
 		return new AO1ClientProtocolHandler(player);
 	}

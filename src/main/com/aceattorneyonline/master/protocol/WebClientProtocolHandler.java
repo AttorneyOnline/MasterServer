@@ -23,7 +23,7 @@ import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.ProtocolHandler;
-import com.aceattorneyonline.master.verticles.ClientListVerticle;
+import com.aceattorneyonline.master.verticles.ClientServerList;
 
 import io.netty.buffer.Unpooled;
 import io.vertx.core.buffer.Buffer;
@@ -117,7 +117,7 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 	@Override
 	public ProtocolHandler registerClient(NetSocket socket) {
 		Player player = new Player(socket);
-		ClientListVerticle.getSingleton().addPlayer(player.id(), player);
+		ClientServerList.getSingleton().addPlayer(player.id(), player);
 		player.setProtocolWriter(new WebClientProtocolWriter(player.socket(), websocket));
 		return new WebClientProtocolHandler(player, websocket);
 	}

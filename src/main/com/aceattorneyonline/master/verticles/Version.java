@@ -14,10 +14,11 @@ import com.aceattorneyonline.master.events.SharedEventProtos.GetVersion;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class Version extends ClientListVerticle {
+public class Version extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Version.class);
 
@@ -37,7 +38,8 @@ public class Version extends ClientListVerticle {
 		try {
 			GetVersion gv = GetVersion.parseFrom(event.body());
 			UUID id = UUID.fromString(gv.getId().getId());
-			Client client = getClientById(id);
+			ClientServerList clientList = ClientServerList.getSingleton();
+			Client client = clientList.getClientById(id);
 			client.protocolWriter().sendVersion(MasterServer.VERSION);
 			event.reply("Server version: " + MasterServer.VERSION);
 		} catch (InvalidProtocolBufferException e) {

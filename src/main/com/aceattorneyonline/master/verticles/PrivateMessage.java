@@ -18,10 +18,11 @@ import com.aceattorneyonline.master.events.PlayerEventProtos.SendPM;
 import com.aceattorneyonline.master.events.UuidProto.Uuid;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 
-public class PrivateMessage extends ClientListVerticle {
+public class PrivateMessage extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(PrivateMessage.class);
 
@@ -50,7 +51,8 @@ public class PrivateMessage extends ClientListVerticle {
 		try {
 			SendPM pm = SendPM.parseFrom(event.body());
 			UUID id = UUID.fromString(pm.getId().getId());
-			Player sender = getPlayerById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player sender = masterList.getPlayerById(id);
 			String targetText = pm.getTarget();
 
 			if (sender == null) {
@@ -62,14 +64,18 @@ public class PrivateMessage extends ClientListVerticle {
 			}
 
 			Player target;
-			Collection<Player> targets = searchPlayerByNameFuzzy(targetText);
+			Collection<Player> targets = masterList.searchPlayerByNameFuzzy(targetText);
 			int targetsSize = targets.size();
 			if (targetsSize > 1) {
-				event.fail(EventErrorReason.USER_ERROR, "Ambiguous result; use quotes if the name has spaces.");
+				event.fail(EventErrorReason.USER_ERROR,
+						"Ambiguous result; use quotes if the name has spaces.");
 			} else if (targetsSize == 1) {
-				target = targets.iterator().next(); // Seems to be better than using a Stream and an Optional...
-				target.protocolWriter().sendChatMessage("PM from " + sender.name(), pm.getMessage());
+				target = targets.iterator().next();
+				target.protocolWriter().sendChatMessage(
+						"PM from " + sender.name(), pm.getMessage());
 				lastRecipient.put(target, sender);
+				// XXX: PMs not very private are they? All I need to do now is forward
+				// them to the NSA
 				logger.info("{} to {} via PM: {}", sender, target, pm.getMessage());
 			} else {
 				event.fail(EventErrorReason.USER_ERROR, "No player found to PM.");
@@ -98,7 +104,8 @@ public class PrivateMessage extends ClientListVerticle {
 		try {
 			ReplyPM pm = ReplyPM.parseFrom(event.body());
 			UUID id = UUID.fromString(pm.getId().getId());
-			Player sender = getPlayerById(id);
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Player sender = masterList.getPlayerById(id);
 			Player target = lastRecipient.get(sender);
 			if (target != null) {
 				target.protocolWriter().sendChatMessage("PM from " + sender.name(), pm.getMessage());
