@@ -31,19 +31,19 @@ public class Top extends AnnotatedCommand {
 	boolean showServers = false;
 	boolean showAll = false;
 
-	@Option(shortName = "p", argName = "show-players", required = false)
+	@Option(shortName = "p", longName = "show-players", flag = true)
 	@Description("Include players in the client list")
 	public void setShowPlayers(boolean showPlayers) {
 		this.showPlayers = showPlayers;
 	}
 
-	@Option(shortName = "s", argName = "show-servers", required = false)
+	@Option(shortName = "s", longName = "show-servers", flag = true)
 	@Description("Include advertised servers in the client list")
 	public void setShowServers(boolean showServers) {
 		this.showServers = showServers;
 	}
 
-	@Option(shortName = "a", argName = "show-all", required = false)
+	@Option(shortName = "a", longName = "show-all", flag = true)
 	@Description("Include all clients in the client list")
 	public void setShowAll(boolean showAll) {
 		this.showAll = showAll;

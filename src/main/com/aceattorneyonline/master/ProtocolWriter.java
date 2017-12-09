@@ -49,7 +49,7 @@ public interface ProtocolWriter {
 	/** Sends a heartbeat success for new advertisers. */
 	void sendNewHeartbeatSuccess();
 
-	/** Sends a periodic check to very that the connection is still open. */
+	/** Sends a periodic check to verify that the connection is still open. */
 	void sendConnectionCheck();
 	
 	/** Sends a ban notification. */
