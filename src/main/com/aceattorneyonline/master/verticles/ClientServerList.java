@@ -111,7 +111,7 @@ public abstract class ClientServerList {
 	public AdvertisedServer addServer(Advertiser advertiser, int port, ServerInfo info) {
 		String hostname = advertiser.address().host();
 		synchronized (serverList) {
-			AdvertisedServer server = serverList.get(hostname);
+			AdvertisedServer server = serverList.get(hostname + ":" + port);
 			if (server != null) {
 				server.setInfo(info);
 				server.addAdvertiser(advertiser);
