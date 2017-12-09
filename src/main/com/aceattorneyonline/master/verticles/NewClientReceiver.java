@@ -46,7 +46,7 @@ public class NewClientReceiver extends AbstractVerticle {
 			Player player = masterList.getPlayerById(clientId);
 			if (player != null) {
 				player.socket().endHandler(nil -> {
-					logger.debug("Dropped {} from client list", player);
+					logger.debug("{}: Dropped from client list", player);
 					player.onDisconnect();
 					masterList.removePlayer(clientId, player);
 				});
@@ -79,7 +79,7 @@ public class NewClientReceiver extends AbstractVerticle {
 			Advertiser advertiser = masterList.getAdvertiserById(clientId);
 			if (advertiser != null) {
 				advertiser.socket().endHandler(nil -> {
-					logger.info("Dropped {} from advertiser list", advertiser);
+					logger.debug("{}: Dropped from advertiser list", advertiser);
 					advertiser.onDisconnect();
 					masterList.removeAdvertiser(clientId, advertiser);
 				});

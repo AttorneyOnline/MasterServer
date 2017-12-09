@@ -17,6 +17,8 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	private final Instant timeAdded;
 
 	private Set<Advertiser> advertisers = new HashSet<>();
+	private boolean destroying = false;
+	private long destructionTimerId;
 
 	public AdvertisedServer(String hostname, int port, ServerInfo info, Advertiser advertiser) {
 		this.hostname = hostname;
@@ -29,6 +31,11 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	/** Adds an advertiser that is currently advertising this server. */
 	public void addAdvertiser(Advertiser advertiser) {
 		advertisers.add(advertiser);
+		if (destroying) {
+			destroying = false;
+			MasterServer.vertx.cancelTimer(destructionTimerId);
+			destructionTimerId = 0;
+		}
 	}
 
 	/**
@@ -38,8 +45,10 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	public void removeAdvertiser(Advertiser advertiser) {
 		advertisers.remove(advertiser);
 		if (advertisers.isEmpty()) {
-			// TODO: maybe wait a while before delisting?
-			delist();
+			destructionTimerId = MasterServer.vertx.setTimer(10000, id -> {				
+				delist();
+			});
+			destroying = true;
 		}
 	}
 
@@ -93,7 +102,7 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 
 	@Override
 	public int compareTo(AdvertisedServer o) {
-		int uptime = uptime().compareTo(o.uptime());
+		int uptime = -uptime().compareTo(o.uptime());
 		if (uptime == 0) {
 			return name().compareTo(o.name());
 		} else {

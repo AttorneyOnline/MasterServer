@@ -24,7 +24,6 @@ public class Advertiser extends Client {
 	}
 
 	public void setServer(AdvertisedServer server) {
-		logger.info("Advertising server: {}", server);
 		this.server = server;
 	}
 
