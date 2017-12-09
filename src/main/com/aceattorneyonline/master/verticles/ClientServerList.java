@@ -34,8 +34,7 @@ public abstract class ClientServerList {
 	private Map<UUID, Client> clientList = new HashMap<>();
 	private Map<UUID, Player> playerList = new HashMap<>();
 	private Map<UUID, Advertiser> advertiserList = new HashMap<>();
-	
-	private static final Comparator<AdvertisedServer> listComparator = (a, b) -> a.uptime().compareTo(b.uptime());
+
 	private static Map<String, AdvertisedServer> serverList = new HashMap<>();
 	private static List<AdvertisedServer> serverListCache = new ArrayList<>();
 	private static boolean serverListCacheDirty = false;
@@ -100,7 +99,7 @@ public abstract class ClientServerList {
 	private void cacheServerList() {
 		logger.trace("Server list cache is dirty. Rebuilding.");
 		synchronized (serverListCache) {
-			serverListCache = serverList.values().stream().sorted(listComparator).collect(Collectors.toList());
+			serverListCache = serverList.values().stream().sorted().collect(Collectors.toList());
 		}
 		serverListCacheDirty = false;
 	}
@@ -116,6 +115,7 @@ public abstract class ClientServerList {
 			if (server != null) {
 				server.setInfo(info);
 				server.addAdvertiser(advertiser);
+				logger.debug("{}: New server added to list", server);
 			} else {
 				server = new AdvertisedServer(hostname, port, info, advertiser);
 				serverList.put(hostname, server);
@@ -127,9 +127,9 @@ public abstract class ClientServerList {
 
 	/** Removes an advertised server from the server list. */
 	public void removeServer(AdvertisedServer server) {
-		logger.debug("Removed {} from server list", server);
+		logger.debug("{}: Removed from server list", server);
 		synchronized (serverList) {
-			serverList.remove(server.address());
+			serverList.remove(server.host());
 		}
 		serverListCacheDirty = true;
 	}

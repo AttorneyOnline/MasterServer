@@ -39,7 +39,12 @@ public class ChatReceiver implements Handler<Message<byte[]>>, AutoCloseable {
 		PlayerEventProtos.SendChat chatMsg;
 		try {
 			chatMsg = PlayerEventProtos.SendChat.parseFrom(event.body());
-			client.protocolWriter().sendChatMessage(chatMsg.getUsername(), chatMsg.getMessage());
+			String username = chatMsg.getUsername();
+			if (username.isEmpty()) {
+				client.protocolWriter().sendSystemMessage(chatMsg.getMessage());
+			} else {
+				client.protocolWriter().sendChatMessage(username, chatMsg.getMessage());
+			}
 		} catch (NullPointerException e) {
 			logger.error("Error sending chat broadcast to client", e);
 		} catch (InvalidProtocolBufferException e) {

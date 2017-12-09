@@ -81,7 +81,8 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	}
 
 	public String toString() {
-		return String.format("%s [version %s][uptime %s:%d]", name(), version(), hostname, port);
+		return String.format("%s [%s:%d][version %s][uptime %s]", name(), host(), port(), version(),
+				uptime().getSeconds());
 	}
 
 	public boolean addressEquals(AdvertisedServer o) {

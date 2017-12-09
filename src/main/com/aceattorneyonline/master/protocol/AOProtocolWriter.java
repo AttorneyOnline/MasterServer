@@ -71,7 +71,7 @@ public class AOProtocolWriter implements ProtocolWriter {
 	public void sendChatMessage(String author, String message) {
 		if (author.isEmpty()) {
 			// This method was found in ms.py
-			write("CT#" + sanitize(message) + "\b00##%");
+			write("CT#" + sanitize(message) + "\0##%");
 		} else {
 			write("CT#" + sanitize(author) + "#" + sanitize(message) + "#%");
 		}

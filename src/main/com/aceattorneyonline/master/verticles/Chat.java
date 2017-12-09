@@ -74,6 +74,12 @@ public class Chat extends AbstractVerticle {
 				if (nameChanged) {
 					event.reply("This name is already taken. Your name has been changed to " + senderName);
 				}
+				if (!sender.name().isEmpty()) {
+					getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(),
+							SendChat.newBuilder()
+							.setMessage(sender.name() + " has changed their name to " + senderName)
+							.build().toByteArray());
+				}
 				sender.setName(senderName);
 				sendMessage = true;
 			} else if (message.isEmpty()) {
@@ -118,7 +124,7 @@ public class Chat extends AbstractVerticle {
 			if (sendMessage) {
 				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
 				event.reply(null);
-				logger.info("[chat] {}: {}", senderId.toString(), message);
+				logger.info("[chat] {}: {}", sender, message);
 			}
 			// TODO: anti-flood
 		} catch (InvalidProtocolBufferException e) {
