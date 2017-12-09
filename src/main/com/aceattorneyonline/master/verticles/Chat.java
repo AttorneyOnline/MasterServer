@@ -56,12 +56,13 @@ public class Chat extends AbstractVerticle {
 			String senderName = chat.getUsername();
 			String message = chat.getMessage().trim();
 
-			boolean sendMessage = false;
 			if (message.length() > 1500) {
 				event.fail(EventErrorReason.SECURITY_ERROR,
 						"Your message was too long. Could we tone it down?");
+				return;
 			} else if (sender == null) {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Requester is not a player.");
+				return;
 			} else if (sender.name() == null || sender.name().isEmpty() || !senderName.equals(sender.name())) {
 				if (senderName == null || senderName.isEmpty()) {
 					event.fail(EventErrorReason.SECURITY_ERROR, "You cannot use an empty name.");
@@ -81,8 +82,8 @@ public class Chat extends AbstractVerticle {
 							.build().toByteArray());
 				}
 				sender.setName(senderName);
-				sendMessage = true;
-			} else if (message.isEmpty()) {
+			}
+			if (message.isEmpty()) {
 				logger.warn("{} tried to send an empty message!", sender);
 				event.reply(null);
 			} else if (message.charAt(0) == '!' || message.charAt(0) == '/') {
@@ -119,9 +120,6 @@ public class Chat extends AbstractVerticle {
 					event.fail(EventErrorReason.USER_ERROR, "Command not found: " + commandName);
 				}
 			} else {
-				sendMessage = true;
-			}
-			if (sendMessage) {
 				getVertx().eventBus().publish(Events.BROADCAST_CHAT.getEventName(), event.body());
 				event.reply(null);
 				logger.info("[chat] {}: {}", sender, message);
