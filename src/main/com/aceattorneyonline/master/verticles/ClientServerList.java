@@ -117,7 +117,7 @@ public abstract class ClientServerList {
 				server.addAdvertiser(advertiser);
 			} else {
 				server = new AdvertisedServer(hostname, port, info, advertiser);
-				serverList.put(hostname, server);
+				serverList.put(server.address(), server);
 				logger.info("{}: New server added to list", server);
 				serverListCacheDirty = true;
 			}
@@ -129,7 +129,7 @@ public abstract class ClientServerList {
 	public void removeServer(AdvertisedServer server) {
 		logger.info("{}: Removed from server list", server);
 		synchronized (serverList) {
-			serverList.remove(server.host());
+			serverList.remove(server.address());
 		}
 		serverListCacheDirty = true;
 	}
