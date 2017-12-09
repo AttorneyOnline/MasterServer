@@ -45,7 +45,7 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	public void removeAdvertiser(Advertiser advertiser) {
 		advertisers.remove(advertiser);
 		if (advertisers.isEmpty()) {
-			destructionTimerId = MasterServer.vertx.setTimer(10000, id -> {				
+			destructionTimerId = MasterServer.vertx.setTimer(15000, id -> {				
 				delist();
 			});
 			destroying = true;

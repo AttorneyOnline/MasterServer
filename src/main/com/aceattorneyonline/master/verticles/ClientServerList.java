@@ -115,7 +115,7 @@ public abstract class ClientServerList {
 			if (server != null) {
 				server.setInfo(info);
 				server.addAdvertiser(advertiser);
-				logger.debug("{}: New server added to list", server);
+				logger.info("{}: New server added to list", server);
 			} else {
 				server = new AdvertisedServer(hostname, port, info, advertiser);
 				serverList.put(hostname, server);
@@ -127,7 +127,7 @@ public abstract class ClientServerList {
 
 	/** Removes an advertised server from the server list. */
 	public void removeServer(AdvertisedServer server) {
-		logger.debug("{}: Removed from server list", server);
+		logger.info("{}: Removed from server list", server);
 		synchronized (serverList) {
 			serverList.remove(server.host());
 		}
