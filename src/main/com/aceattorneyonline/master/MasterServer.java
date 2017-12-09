@@ -14,6 +14,7 @@ import com.aceattorneyonline.master.protocol.AOServerProtocolHandler;
 import com.aceattorneyonline.master.protocol.WebClientProtocolHandler;
 import com.aceattorneyonline.master.verticles.BanList;
 import com.aceattorneyonline.master.verticles.Chat;
+import com.aceattorneyonline.master.verticles.Checker;
 import com.aceattorneyonline.master.verticles.ClientServerList;
 import com.aceattorneyonline.master.verticles.ListPlayers;
 import com.aceattorneyonline.master.verticles.Motd;
@@ -101,6 +102,7 @@ public class MasterServer {
 		vertx.deployVerticle(PrivateMessage.class.getName(), worker);
 		vertx.deployVerticle(ListPlayers.class.getName(), worker);
 		vertx.deployVerticle(RemoteShell.class.getName(), worker);
+		vertx.deployVerticle(Checker.class.getName(), worker);
 	}
 
 	private static void logUncaughtExceptions() {
