@@ -115,10 +115,10 @@ public abstract class ClientServerList {
 			if (server != null) {
 				server.setInfo(info);
 				server.addAdvertiser(advertiser);
-				logger.info("{}: New server added to list", server);
 			} else {
 				server = new AdvertisedServer(hostname, port, info, advertiser);
 				serverList.put(hostname, server);
+				logger.info("{}: New server added to list", server);
 				serverListCacheDirty = true;
 			}
 			return server;
