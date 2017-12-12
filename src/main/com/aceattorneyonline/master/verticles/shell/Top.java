@@ -65,11 +65,12 @@ public class Top extends AnnotatedCommand {
 
 			// Print header
 			Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
-			ansi.format("top - %tT - up %d days %02d:%02d, %2d clients, %2d advertised", Instant.now().toEpochMilli(),
+			ansi.format("top - %tT - up %d days %02d:%02d, %2d players, %2d advertisers, %2d servers", Instant.now().toEpochMilli(),
 					uptime.toDays(),
 					uptime.toHours() % 24,
 					uptime.toMinutes() % 60,
-					masterList.getClientsList().size(),
+					masterList.getPlayersList().size(),
+					masterList.getAdvertisersList().size(),
 					masterList.getSortedServerList().size());
 			ansi.eraseLine(Ansi.Erase.FORWARD);
 
