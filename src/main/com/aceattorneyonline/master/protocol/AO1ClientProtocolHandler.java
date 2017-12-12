@@ -91,7 +91,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 						"You cannot use this as your nickname, as it is reserved for the master server.");
 			} else {
 				eventBus.send(Events.SEND_CHAT.getEventName(), SendChat.newBuilder().setId(id)
-						.setUsername(unescape(tokens.get(1))).setMessage(unescape(tokens.get(2))).build().toByteArray(),
+						.setUsername(AOUtils.unescape(tokens.get(1))).setMessage(AOUtils.unescape(tokens.get(2))).build().toByteArray(),
 						this::handleEventReply);
 			}
 			break;
@@ -130,21 +130,6 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 				break;
 			}
 		}
-	}
-
-	protected String unescape(String str) {
-		//@formatter:off
-		return str.replaceAll("<percent>", "%")
-				.replaceAll("<num>", "#")
-				.replaceAll("<dollar>", "\\$")
-				.replaceAll("<and>", "&")
-				.replaceAll("\\$n", "\n")
-				// Unescape doubly escaped symbols
-				.replaceAll("<percent\\>", "<percent>")
-				.replaceAll("<num\\>", "<num>")
-				.replaceAll("<dollar\\>", "<dollar>")
-				.replaceAll("<and\\>", "<and>");
-		//@formatter:on
 	}
 
 	@Override
