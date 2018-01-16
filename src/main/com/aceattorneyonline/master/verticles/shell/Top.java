@@ -30,6 +30,8 @@ public class Top extends AnnotatedCommand {
 	boolean showPlayers = false;
 	boolean showServers = false;
 	boolean showAll = false;
+	
+	private int startRow = 3;
 
 	@Option(shortName = "p", longName = "show-players", flag = true)
 	@Description("Include players in the client list")
@@ -84,24 +86,47 @@ public class Top extends AnnotatedCommand {
 			int curRow = 3;
 			if (showAll || showPlayers)
 				for (Player player : masterList.getPlayersList()) {
-					if (curRow >= process.height() && process.height() > 0) break;
+					if (curRow >= process.height() && process.height() > 0)
+						break;
+					if (curRow < startRow)
+						continue;
 					ansi.format("%36s  %35s  %24s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
 							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
-					ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
+					ansi.eraseLine(Ansi.Erase.FORWARD).newline();
+					curRow++;
 				}
 			if (showAll || showServers)
 				for (AdvertisedServer server : masterList.getSortedServerList()) {
-					if (curRow >= process.height() && process.height() > 0) break;
+					if (curRow >= process.height() && process.height() > 0)
+						break;
+					if (curRow < startRow)
+						continue;
 					if (server != null) {
 						Duration advUptime = server.uptime();
 						ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", "", server.name(), server.address(),
 								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
 								"Server");
-						ansi.eraseLine(Ansi.Erase.FORWARD).newline(); curRow++;
+						ansi.eraseLine(Ansi.Erase.FORWARD).newline();
+						curRow++;
 					}
 				}
 			ansi.eraseScreen(Ansi.Erase.FORWARD);
 			process.write(builder.toString());
+		});
+		
+		process.stdinHandler(stdin -> {
+			if (stdin.startsWith("\u001b[") && stdin.length() >= 3) {
+				switch (stdin.charAt(2)) {
+				case 'A':
+					// Move up
+					startRow = Math.max(0, startRow - 1);
+					break;
+				case 'B':
+					// Move down
+					startRow++;
+					break;
+				}
+			}
 		});
 
 		process.interruptHandler(interrupt -> {
