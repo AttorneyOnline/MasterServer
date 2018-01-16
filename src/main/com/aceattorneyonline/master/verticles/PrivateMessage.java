@@ -123,7 +123,7 @@ public class PrivateMessage extends AbstractVerticle {
 	public static com.google.protobuf.Message parseReply(Uuid invoker, List<String> args)
 			throws IllegalArgumentException {
 		if (args.size() >= 1) {
-			String message = String.join(" ", args.subList(1, args.size()));
+			String message = String.join(" ", args);
 			return ReplyPM.newBuilder().setId(invoker).setMessage(message).build();
 		} else {
 			return ReplyPM.newBuilder().setId(invoker).setMessage("").build();
