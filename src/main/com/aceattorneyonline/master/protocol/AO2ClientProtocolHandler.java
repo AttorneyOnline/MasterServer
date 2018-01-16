@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aceattorneyonline.master.Client;
+import com.aceattorneyonline.master.ClientVersion;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.ProtocolHandler;
@@ -45,6 +46,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 		case "ID":
 			// Client version: ID#[client software]#[version]#%
 			// This is an AO2 thing
+			context().setVersion(AOUtils.unescape(tokens.get(2)));
 			break;
 		case "HI":
 			// Hard drive ID (can be anything in practice): HI#[hdid]#%
@@ -77,6 +79,7 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 	@Override
 	public CompatibilityResult isCompatible(NetSocket socket, Buffer event) {
 		if (event.toString().equals("ALL#%")) {
+			socket.write("AO2CHECK#" + ClientVersion.getLatestAOVersion() + "#%");
 			return CompatibilityResult.COMPATIBLE;
 		}
 		return CompatibilityResult.FAIL;

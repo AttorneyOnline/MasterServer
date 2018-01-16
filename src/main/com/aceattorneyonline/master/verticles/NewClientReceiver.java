@@ -12,6 +12,7 @@ import com.aceattorneyonline.master.events.AdvertiserEventProtos.NewAdvertiser;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
 import com.aceattorneyonline.master.events.PlayerEventProtos.NewPlayer;
+import com.aceattorneyonline.master.events.SharedEventProtos.AnalyticsEvent;
 import com.aceattorneyonline.master.events.SharedEventProtos.GetMotd;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -45,11 +46,18 @@ public class NewClientReceiver extends AbstractVerticle {
 			ClientServerList masterList = ClientServerList.getSingleton();
 			Player player = masterList.getPlayerById(clientId);
 			if (player != null) {
+				AnalyticsEvent analyticsEvent = AnalyticsEvent.newBuilder()
+						.setId(newPlayer.getId())
+						.setAddress(player.address().host())
+						.setVersion(player.version())
+						.build();
 				player.socket().endHandler(nil -> {
 					logger.debug("{}: Dropped from client list", player);
 					player.onDisconnect();
+					getVertx().eventBus().publish(Events.PLAYER_LEFT.getEventName(), analyticsEvent.toByteArray());
 					masterList.removePlayer(clientId, player);
 				});
+				getVertx().eventBus().publish(Events.PLAYER_CONNECTED.getEventName(), analyticsEvent.toByteArray());
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
 					event.reply(reply.result().body() + "\n" + addUserSpecificMessage(player));
 				});
@@ -78,11 +86,18 @@ public class NewClientReceiver extends AbstractVerticle {
 			ClientServerList masterList = ClientServerList.getSingleton();
 			Advertiser advertiser = masterList.getAdvertiserById(clientId);
 			if (advertiser != null) {
+				AnalyticsEvent analyticsEvent = AnalyticsEvent.newBuilder()
+						.setId(newAdvertiser.getId())
+						.setAddress(advertiser.address().host())
+						.setVersion(advertiser.version())
+						.build();
 				advertiser.socket().endHandler(nil -> {
 					logger.debug("{}: Dropped from advertiser list", advertiser);
 					advertiser.onDisconnect();
+					getVertx().eventBus().publish(Events.ADVERTISER_LEFT.getEventName(), analyticsEvent.toByteArray());
 					masterList.removeAdvertiser(clientId, advertiser);
 				});
+				getVertx().eventBus().publish(Events.ADVERTISER_CONNECTED.getEventName(), analyticsEvent.toByteArray());
 				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.SECURITY_ERROR, "Advertiser does not exist on advertiser table");

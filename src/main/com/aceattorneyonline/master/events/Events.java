@@ -32,6 +32,11 @@ import com.google.protobuf.Message;
 public enum Events {
 	NEW_PLAYER("ms.player.new"),
 	NEW_ADVERTISER("ms.advertiser.new"),
+	
+	PLAYER_CONNECTED("ms.player.connected"),
+	ADVERTISER_CONNECTED("ms.advertiser.connected"),
+	PLAYER_LEFT("ms.player.left"),
+	ADVERTISER_LEFT("ms.advertiser.left"),
 
 	GET_SERVER_LIST("ms.serverlist.get"),
 	GET_SERVER_LIST_PAGED("ms.serverlist.get.paged"),

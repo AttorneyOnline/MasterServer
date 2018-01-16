@@ -18,26 +18,34 @@ public abstract class Client {
 	private final NetSocket socket;
 	private final UUID id;
 	private ProtocolWriter writer;
+	private String version;
 	
 	public Client(NetSocket socket) {
-		this(socket, UUID.randomUUID());
+		this(socket, UUID.randomUUID(), null);
 		setProtocolWriter(new NullProtocolWriter());
 	} 
 
-	public Client(NetSocket context, UUID id) {
+	public Client(NetSocket context, UUID id, String version) {
 		this.socket = context;
 		this.id = id;
+		this.version = version;
 	}
 	
 	public Client(Client client) {
 		this.socket = client.socket;
 		this.id = client.id;
 		this.writer = client.writer;
+		this.version = client.version;
 	}
 
 	public void setProtocolWriter(ProtocolWriter writer) {
 		logger.debug("{}: Set protocol writer to {}", this, writer.getClass().getSimpleName());
 		this.writer = writer;
+	}
+	
+	public void setVersion(String version) {
+		logger.debug("{}: Set version to {}", this, version);
+		this.version = version;
 	}
 
 	/**
@@ -60,6 +68,11 @@ public abstract class Client {
 
 	public SocketAddress address() {
 		return socket.remoteAddress();
+	}
+	
+	/** Returns the version of the client. */
+	public String version() {
+		return version;
 	}
 
 	/**

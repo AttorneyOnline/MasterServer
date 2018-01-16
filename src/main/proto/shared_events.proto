@@ -14,3 +14,10 @@ message GetVersion {
 // Flood control handled by SendChat
 message GetMotd {
 }
+
+// Internal use only
+message AnalyticsEvent {
+	Uuid id = 1;
+	string address = 2;
+	string version = 3;
+}

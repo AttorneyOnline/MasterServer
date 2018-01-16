@@ -149,6 +149,7 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 		Player player = new Player(socket);
 		ClientServerList.getSingleton().addPlayer(player.id(), player);
 		player.setProtocolWriter(new AOProtocolWriter(player.socket()));
+		player.setVersion("1.7.5");
 		return new AO1ClientProtocolHandler(player);
 	}
 
