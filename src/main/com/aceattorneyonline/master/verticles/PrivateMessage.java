@@ -77,6 +77,7 @@ public class PrivateMessage extends AbstractVerticle {
 				// XXX: PMs not very private are they? All I need to do now is forward
 				// them to the NSA
 				logger.info("{} to {} via PM: {}", sender, target, pm.getMessage());
+				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.USER_ERROR, "No player found to PM.");
 			}
@@ -111,6 +112,7 @@ public class PrivateMessage extends AbstractVerticle {
 				target.protocolWriter().sendChatMessage("PM from " + sender.name(), pm.getMessage());
 				lastRecipient.put(target, sender);
 				logger.info("{} to {} via PM: {}", sender, target, pm.getMessage());
+				event.reply(null);
 			} else {
 				event.fail(EventErrorReason.USER_ERROR, "That player does not exist anymore.");
 			}
