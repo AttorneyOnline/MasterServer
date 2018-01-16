@@ -64,8 +64,16 @@ public class PrivateMessage extends AbstractVerticle {
 			}
 
 			Player target;
-			Collection<Player> targets = masterList.searchPlayerByNameFuzzy(targetText);
+			// Try an exact search first
+			Collection<Player> targets = masterList.searchPlayerByNameExact(targetText);
 			int targetsSize = targets.size();
+			
+			// No exact matching players found - try a fuzzy search
+			if (targetsSize == 0) {
+				targets = masterList.searchPlayerByNameFuzzy(targetText);
+				targetsSize = targets.size();
+			}
+			
 			if (targetsSize > 1) {
 				event.fail(EventErrorReason.USER_ERROR,
 						"Ambiguous result; use quotes if the name has spaces.");
