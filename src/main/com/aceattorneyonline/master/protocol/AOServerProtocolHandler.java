@@ -26,20 +26,29 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.net.NetSocket;
 
-public class AOServerProtocolHandler extends ContextualProtocolHandler {
+public class AOServerProtocolHandler implements ContextualProtocolHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(AOServerProtocolHandler.class);
+	protected Advertiser context;
 
 	public AOServerProtocolHandler() {
-		super();
+		
 	}
 
-	public AOServerProtocolHandler(Client context) {
-		super(context);
+	public AOServerProtocolHandler(Advertiser context) {
+		this.context = context;
 		MasterServer.vertx.eventBus()
 				.send(Events.NEW_ADVERTISER.getEventName(), NewPlayer.newBuilder()
 						.setId(Uuid.newBuilder().setId(context.id().toString()).build()).build().toByteArray(),
 						this::handleEventReply);
+	}
+	
+	public Client context() {
+		return context;
+	}
+	
+	public void setContext(Advertiser context) {
+		this.context = context;
 	}
 
 	@Override

@@ -3,6 +3,8 @@ package com.aceattorneyonline.master;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aceattorneyonline.master.events.SharedEventProtos.AnalyticsEvent;
+
 import io.vertx.core.net.NetSocket;
 
 /**
@@ -15,6 +17,8 @@ public class Player extends Client {
 	
 	private String name = "";
 	private boolean admin;
+	private String version;
+	private String hardwareId;
 
 	// This chat receiver is kept here as a strong reference.
 	private final ChatReceiver chatReceiver;
@@ -28,6 +32,16 @@ public class Player extends Client {
 		logger.info("{}: Set name to {}", this, name);
 		this.name = name;
 	}
+	
+	public void setVersion(String version) {
+		logger.debug("{}: Set version to {}", this, version);
+		this.version = version;
+	}
+	
+	public void setHardwareId(String hardwareId) {
+		logger.debug("{}: Set hardware ID to {}", this, hardwareId);
+		this.hardwareId = hardwareId;
+	}
 
 	/**
 	 * Returns the name used in chat. May be null, as players are only required to
@@ -35,6 +49,16 @@ public class Player extends Client {
 	 */
 	public String name() {
 		return name;
+	}
+	
+	/** Returns the version of the client. May be null. */
+	public String version() {
+		return version;
+	}
+	
+	/** Returns the hardware ID of the client (often the hard drive ID). May be null. */
+	public String hardwareId() {
+		return hardwareId;
 	}
 
 	public String toString() {
@@ -60,5 +84,17 @@ public class Player extends Client {
 	public void onDisconnect() {
 		if (chatReceiver != null)
 			chatReceiver.close();
+	}
+	
+	/** Creates a protocol buffer containing this player's analytics data. */
+	public AnalyticsEvent getAnalyticsData() {
+		AnalyticsEvent.Builder analyticsEventBuilder = AnalyticsEvent.newBuilder()
+				.setAddress(address().host());
+		if (version() != null)
+			analyticsEventBuilder.setVersion(version());
+		if (hardwareId() != null)
+			analyticsEventBuilder.setId(hardwareId());
+		
+		return analyticsEventBuilder.build();
 	}
 }

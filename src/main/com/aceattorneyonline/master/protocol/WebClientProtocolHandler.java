@@ -19,7 +19,6 @@ import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
 import com.aceattorneyonline.master.ProtocolHandler;
@@ -41,7 +40,7 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 		super();
 	}
 
-	public WebClientProtocolHandler(Client context, Draft_6455 websocket) {
+	public WebClientProtocolHandler(Player context, Draft_6455 websocket) {
 		super(context);
 		this.websocket = websocket;
 	}
@@ -49,6 +48,7 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 	@Override
 	@SuppressWarnings("deprecation")
 	public void handle(Buffer event) {
+		//@formatter:off
 		/*
 		 * if (event.length() < 6) {
 		 * logger.debug("Websocket packet is less than 6 bytes long. Ignoring.");
@@ -60,6 +60,7 @@ public class WebClientProtocolHandler extends AO1ClientProtocolHandler {
 		 * length, event.length())); } } catch (IndexOutOfBoundsException e) {
 		 * logger.debug("Websocket packet was shorter than expected!", e); }
 		 */
+		//@formatter:on
 
 		// Don't parse handshakes
 		if (event.toString().startsWith("GET / HTTP/1.1"))

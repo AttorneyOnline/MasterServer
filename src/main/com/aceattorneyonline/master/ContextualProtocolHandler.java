@@ -5,40 +5,31 @@ import com.aceattorneyonline.master.protocol.CompatibilityResult;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetSocket;
 
-public abstract class ContextualProtocolHandler implements ProtocolHandler {
-
-	private Client context;
-
-	/** Instantiates a generic protocol handler, for compatibility checking. */
-	public ContextualProtocolHandler() {
-
-	}
-
-	/** Instantiates a protocol hander with context. */
-	public ContextualProtocolHandler(Client context) {
-		this.context = context;
-	}
-
-	public Client context() {
-		return context;
-	}
+/**
+ * Represents a protocol handler with a client that can be associated with it
+ * (the "context").
+ * 
+ * Although an interface is not contractually required to have a constructor, it is
+ * recommended for implementations to have the following constructors:
+ *  - A default constructor for a generic protocol handler, for compatibility checking.
+ *  - A constructor that takes a client context.
+ */
+public interface ContextualProtocolHandler extends ProtocolHandler {
 	
-	public void setContext(Client context) {
-		this.context = context;
-	}
+	Client context();
 
 	@Override
-	public abstract void handle(Buffer event);
+	void handle(Buffer event);
 
 	/**
 	 * Determines whether or not the buffer provided is compatible with this
 	 * protocol.
 	 */
 	@Override
-	public abstract CompatibilityResult isCompatible(NetSocket socket, Buffer event);
+	CompatibilityResult isCompatible(NetSocket socket, Buffer event);
 
 	/** Returns a new instance of this protocol handler, with a context attached. */
 	@Override
-	public abstract ProtocolHandler registerClient(NetSocket socket);
+	ProtocolHandler registerClient(NetSocket socket);
 
 }

@@ -17,7 +17,7 @@ message GetMotd {
 
 // Internal use only
 message AnalyticsEvent {
-	Uuid id = 1;
+	string id = 1;
 	string address = 2;
 	string version = 3;
 }

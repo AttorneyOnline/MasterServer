@@ -28,16 +28,17 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.net.NetSocket;
 
-public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
+public class AO1ClientProtocolHandler implements ContextualProtocolHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(AO1ClientProtocolHandler.class);
+	protected Player context;
 
 	public AO1ClientProtocolHandler() {
-		super();
+		
 	}
 
-	public AO1ClientProtocolHandler(Client context) {
-		super(context);
+	public AO1ClientProtocolHandler(Player context) {
+		this.context = context;
 		// XXX: this might lead to a race condition, so supervise carefully!
 		logger.debug("{}: Sending new player event", context());
 		MasterServer.vertx.eventBus().<String>send(
@@ -53,6 +54,14 @@ public class AO1ClientProtocolHandler extends ContextualProtocolHandler {
 						logger.error("{}: New player failed: {}", context(), reply.cause());
 					}
 				});
+	}
+	
+	public Client context() {
+		return context;
+	}
+	
+	public void setContext(Player context) {
+		this.context = context;
 	}
 
 	@Override

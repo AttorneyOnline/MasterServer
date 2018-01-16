@@ -46,18 +46,19 @@ public class NewClientReceiver extends AbstractVerticle {
 			ClientServerList masterList = ClientServerList.getSingleton();
 			Player player = masterList.getPlayerById(clientId);
 			if (player != null) {
-				AnalyticsEvent analyticsEvent = AnalyticsEvent.newBuilder()
-						.setId(newPlayer.getId())
-						.setAddress(player.address().host())
-						.setVersion(player.version())
-						.build();
 				player.socket().endHandler(nil -> {
 					logger.debug("{}: Dropped from client list", player);
 					player.onDisconnect();
-					getVertx().eventBus().publish(Events.PLAYER_LEFT.getEventName(), analyticsEvent.toByteArray());
+					getVertx().eventBus().publish(Events.PLAYER_LEFT.getEventName(), player.getAnalyticsData().toByteArray());
 					masterList.removePlayer(clientId, player);
 				});
-				getVertx().eventBus().publish(Events.PLAYER_CONNECTED.getEventName(), analyticsEvent.toByteArray());
+				
+				// Do not send the player connected event if the version has not been set.
+				// This is usually an indication that this is an AO2 client and
+				// we are waiting for some more info.
+				if (player.version() != null) {
+					getVertx().eventBus().publish(Events.PLAYER_CONNECTED.getEventName(), player.getAnalyticsData().toByteArray());
+				}
 				getVertx().eventBus().send(Events.GET_MOTD.getEventName(), GetMotd.newBuilder().build().toByteArray(), reply -> {
 					event.reply(reply.result().body() + "\n" + addUserSpecificMessage(player));
 				});
@@ -87,9 +88,8 @@ public class NewClientReceiver extends AbstractVerticle {
 			Advertiser advertiser = masterList.getAdvertiserById(clientId);
 			if (advertiser != null) {
 				AnalyticsEvent analyticsEvent = AnalyticsEvent.newBuilder()
-						.setId(newAdvertiser.getId())
+						.setId(newAdvertiser.getId().getId())
 						.setAddress(advertiser.address().host())
-						.setVersion(advertiser.version())
 						.build();
 				advertiser.socket().endHandler(nil -> {
 					logger.debug("{}: Dropped from advertiser list", advertiser);

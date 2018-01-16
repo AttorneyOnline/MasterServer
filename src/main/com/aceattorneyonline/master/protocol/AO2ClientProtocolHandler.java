@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.ClientVersion;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.Player;
@@ -29,15 +28,20 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 		super();
 	}
 
-	public AO2ClientProtocolHandler(Client context) {
+	public AO2ClientProtocolHandler(Player context) {
 		super(context);
 	}
 
 	@Override
 	public void handle(Buffer event) {
 		logger.trace("{}: Handling incoming packet", context());
-		String packet = event.toString("UTF-8").trim();
-		packet = packet.substring(0, packet.indexOf('%'));
+		String fullPacket = event.toString("UTF-8").trim();
+		String packet = fullPacket.substring(0, fullPacket.indexOf('%') + 1);
+		String remainingPacket = fullPacket.substring(packet.length());
+		Buffer remainder = null;
+		if (remainingPacket.indexOf('%') != -1) {
+			remainder = Buffer.buffer(remainingPacket);
+		}
 		List<String> tokens = Arrays.asList(packet.split("#"));
 		EventBus eventBus = MasterServer.vertx.eventBus();
 		Uuid id = Uuid.newBuilder().setId(context().id().toString()).build();
@@ -46,12 +50,14 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 		case "ID":
 			// Client version: ID#[client software]#[version]#%
 			// This is an AO2 thing
-			context().setVersion(AOUtils.unescape(tokens.get(2)));
+			context.setVersion(AOUtils.unescape(tokens.get(2)));
 			break;
 		case "HI":
 			// Hard drive ID (can be anything in practice): HI#[hdid]#%
 			// We don't care about your hard drive ID.
 			// This is an AO2 thing
+			context.setHardwareId(AOUtils.unescape(tokens.get(1)));
+			eventBus.publish(Events.PLAYER_CONNECTED.getEventName(), context.getAnalyticsData().toByteArray());
 			break;
 		case "ALL":
 			// All servers: ALL#%
@@ -73,6 +79,10 @@ public class AO2ClientProtocolHandler extends AO1ClientProtocolHandler {
 		default:
 			logger.warn("{}: Received unknown message: {}", context(), packet);
 			break;
+		}
+		
+		if (remainder != null) {
+			handle(remainder);
 		}
 	}
 

@@ -89,11 +89,19 @@ public class Analytics extends AbstractVerticle {
 	
 	private EventHit createEvent(AnalyticsEvent event) {
 		EventHit hit = new EventHit()
-				.eventLabel(event.getId().getId())
 				.userIp(event.getAddress());
 		
 		if (event.getVersion() != null) {
 			hit.userAgent(event.getVersion());
+		}
+		
+		// AO1 does not populate the ID because the AO1 client
+		// does not send a hardware ID. Instead, we will use the
+		// IP address once more.
+		if (event.getId() != null) {
+			hit.userId(event.getId());
+		} else {
+			hit.userId(event.getAddress());
 		}
 		
 		return hit;
