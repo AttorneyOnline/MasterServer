@@ -50,6 +50,63 @@ public class Top extends AnnotatedCommand {
 	public void setShowAll(boolean showAll) {
 		this.showAll = showAll;
 	}
+	
+	private void draw(CommandProcess process, ClientServerList masterList) {
+		if (RemoteShell.checkTermSizeError(process)) return;
+		StringBuilder builder = new StringBuilder();
+		Ansi ansi = ansi(builder);
+		ansi.a(Ansi.Attribute.CONCEAL_ON).cursor(0, 0);
+
+		// Print header
+		Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
+		ansi.format("top - %tT - up %d days %02d:%02d, %2d players, %2d advertisers, %2d servers", Instant.now().toEpochMilli(),
+				uptime.toDays(),
+				uptime.toHours() % 24,
+				uptime.toMinutes() % 60,
+				masterList.getPlayersList().size(),
+				masterList.getAdvertisersList().size(),
+				masterList.getSortedServerList().size());
+		ansi.eraseLine(Ansi.Erase.FORWARD);
+
+		// Print columns
+		ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
+				.format("%36s  %35s  %24s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
+				.a(Ansi.Attribute.NEGATIVE_OFF).eraseLine(Ansi.Erase.FORWARD).newline();
+
+		showAll = !(showPlayers || showServers); // If no special filter, just show all of them.
+
+		int curRow = 3, drawnRows = 3;
+		if (showAll || showPlayers)
+			for (Player player : masterList.getPlayersList()) {
+				if (drawnRows >= process.height() && process.height() > 0)
+					break;
+				curRow++;
+				if (curRow < startRow)
+					continue;
+				ansi.format("%36s  %35s  %24s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
+						"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
+				ansi.eraseLine(Ansi.Erase.FORWARD).newline();
+				drawnRows++;
+			}
+		if (showAll || showServers)
+			for (AdvertisedServer server : masterList.getSortedServerList()) {
+				if (drawnRows >= process.height() && process.height() > 0)
+					break;
+				curRow++;
+				if (curRow < startRow)
+					continue;
+				if (server != null) {
+					Duration advUptime = server.uptime();
+					ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", "", server.name(), server.address(),
+							advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
+							"Server");
+					ansi.eraseLine(Ansi.Erase.FORWARD).newline();
+					drawnRows++;
+				}
+			}
+		ansi.eraseScreen(Ansi.Erase.FORWARD);
+		process.write(builder.toString());
+	}
 
 	@Override
 	public void process(CommandProcess process) {
@@ -60,58 +117,7 @@ public class Top extends AnnotatedCommand {
 
 		ClientServerList masterList = ClientServerList.getSingleton();
 		long id = process.vertx().setPeriodic(1000, handler -> {
-			if (RemoteShell.checkTermSizeError(process)) return;
-			StringBuilder builder = new StringBuilder();
-			Ansi ansi = ansi(builder);
-			ansi.a(Ansi.Attribute.CONCEAL_ON).cursor(0, 0);
-
-			// Print header
-			Duration uptime = Duration.between(MasterServer.START_TIME, Instant.now());
-			ansi.format("top - %tT - up %d days %02d:%02d, %2d players, %2d advertisers, %2d servers", Instant.now().toEpochMilli(),
-					uptime.toDays(),
-					uptime.toHours() % 24,
-					uptime.toMinutes() % 60,
-					masterList.getPlayersList().size(),
-					masterList.getAdvertisersList().size(),
-					masterList.getSortedServerList().size());
-			ansi.eraseLine(Ansi.Erase.FORWARD);
-
-			// Print columns
-			ansi.newline().a(Ansi.Attribute.NEGATIVE_ON)
-					.format("%36s  %35s  %24s  %11s  %1s  %25s", "UUID", "Name", "IP", "Uptime", "A", "Protocol")
-					.a(Ansi.Attribute.NEGATIVE_OFF).eraseLine(Ansi.Erase.FORWARD).newline();
-
-			showAll = !(showPlayers || showServers); // If no special filter, just show all of them.
-
-			int curRow = 3;
-			if (showAll || showPlayers)
-				for (Player player : masterList.getPlayersList()) {
-					if (curRow >= process.height() && process.height() > 0)
-						break;
-					if (curRow < startRow)
-						continue;
-					ansi.format("%36s  %35s  %24s  %11s  %1s  %25s", player.id(), player.name(), player.address(),
-							"", player.hasAdmin() ? "A" : "", player.protocolWriter().getClass().getSimpleName());
-					ansi.eraseLine(Ansi.Erase.FORWARD).newline();
-					curRow++;
-				}
-			if (showAll || showServers)
-				for (AdvertisedServer server : masterList.getSortedServerList()) {
-					if (curRow >= process.height() && process.height() > 0)
-						break;
-					if (curRow < startRow)
-						continue;
-					if (server != null) {
-						Duration advUptime = server.uptime();
-						ansi.format("%36s  %35s  %24s  %02d:%02d:%02d:%02d  %1s  %25s", "", server.name(), server.address(),
-								advUptime.toDays(), advUptime.toHours() % 24, advUptime.toMinutes() % 60, advUptime.getSeconds() % 60, "",
-								"Server");
-						ansi.eraseLine(Ansi.Erase.FORWARD).newline();
-						curRow++;
-					}
-				}
-			ansi.eraseScreen(Ansi.Erase.FORWARD);
-			process.write(builder.toString());
+			draw(process, masterList);
 		});
 		
 		process.stdinHandler(stdin -> {
@@ -120,10 +126,12 @@ public class Top extends AnnotatedCommand {
 				case 'A':
 					// Move up
 					startRow = Math.max(0, startRow - 1);
+					draw(process, masterList);
 					break;
 				case 'B':
 					// Move down
 					startRow++;
+					draw(process, masterList);
 					break;
 				}
 			}
