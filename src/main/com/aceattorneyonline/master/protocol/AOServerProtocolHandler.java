@@ -12,6 +12,7 @@ import com.aceattorneyonline.master.ContextualProtocolHandler;
 import com.aceattorneyonline.master.MasterServer;
 import com.aceattorneyonline.master.ProtocolHandler;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
+import com.aceattorneyonline.master.events.AdvertiserEventProtos.Pin;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
@@ -89,6 +90,10 @@ public class AOServerProtocolHandler implements ContextualProtocolHandler {
 			eventBus.send(Events.ADVERTISER_PING.getEventName(), Ping.newBuilder().setId(id).build().toByteArray(),
 					this::handleEventReply);
 			break;
+		case "PIN":
+			// Pin: PIN#[secret]#% (pins the server as long as it is alive)
+			eventBus.send(Events.PIN_SERVER.getEventName(), Pin.newBuilder().setId(id).setSecret(tokens.get(1))
+					.build().toByteArray(), this::handleEventReply);
 		}
 	}
 

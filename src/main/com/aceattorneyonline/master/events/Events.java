@@ -41,6 +41,8 @@ public enum Events {
 	GET_SERVER_LIST("ms.serverlist.get"),
 	GET_SERVER_LIST_PAGED("ms.serverlist.get.paged"),
 
+	PIN_SERVER("ms.advertiser.pin"),
+
 	SEND_CHAT("ms.chat.send"), // gets passed to event handler first
 	BROADCAST_CHAT("ms.chat.broadcast"), // gets broadcast to all players
 	CHAT_COMMAND_LIST("ms.chat.command.list", new ChatCommand() {

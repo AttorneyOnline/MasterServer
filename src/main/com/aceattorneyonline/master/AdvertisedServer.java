@@ -15,6 +15,7 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	private ServerInfo info;
 
 	private final Instant timeAdded;
+	private boolean pinned = false;
 
 	private Set<Advertiser> advertisers = new HashSet<>();
 	private boolean destroying = false;
@@ -83,6 +84,10 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 	public void setInfo(ServerInfo info) {
 		this.info = info;
 	}
+	
+	public void setPin(boolean pinned) {
+		this.pinned = pinned;
+	}
 
 	private void delist() {
 		ClientServerList masterList = ClientServerList.getSingleton();
@@ -102,12 +107,15 @@ public class AdvertisedServer implements Comparable<AdvertisedServer> {
 
 	@Override
 	public int compareTo(AdvertisedServer o) {
+		// If either one is pinned (but not both), the one that is pinned goes first
+		if (pinned ^ o.pinned) {
+			return pinned ? -1 : 1;
+		}
 		int uptime = -uptime().compareTo(o.uptime());
 		if (uptime == 0) {
 			return name().compareTo(o.name());
-		} else {
-			return uptime;
 		}
+		return uptime;
 	}
 
 }

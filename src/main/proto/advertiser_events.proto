@@ -28,3 +28,8 @@ message Heartbeat {
 message Ping {
 	Uuid id = 1;
 }
+
+message Pin {
+	Uuid id = 1;
+	string secret = 2;
+}

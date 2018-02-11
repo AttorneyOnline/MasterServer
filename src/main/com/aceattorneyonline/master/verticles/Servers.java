@@ -1,6 +1,14 @@
 package com.aceattorneyonline.master.verticles;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +18,7 @@ import com.aceattorneyonline.master.Advertiser;
 import com.aceattorneyonline.master.Client;
 import com.aceattorneyonline.master.ServerInfo;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Heartbeat;
+import com.aceattorneyonline.master.events.AdvertiserEventProtos.Pin;
 import com.aceattorneyonline.master.events.AdvertiserEventProtos.Ping;
 import com.aceattorneyonline.master.events.EventErrorReason;
 import com.aceattorneyonline.master.events.Events;
@@ -24,6 +33,7 @@ import io.vertx.core.eventbus.Message;
 public class Servers extends AbstractVerticle {
 
 	private static final Logger logger = LoggerFactory.getLogger(Servers.class);
+	private static final String PIN_SECRET_FILE = "pin_secret.txt";
 
 	@Override
 	public void start() {
@@ -33,6 +43,7 @@ public class Servers extends AbstractVerticle {
 		eventBus.consumer(Events.GET_SERVER_LIST_PAGED.toString(), this::handleGetServerListPaged);
 		eventBus.consumer(Events.ADVERTISER_HEARTBEAT.toString(), this::handleHeartbeat);
 		eventBus.consumer(Events.ADVERTISER_PING.toString(), this::handlePing);
+		eventBus.consumer(Events.PIN_SERVER.toString(), this::handlePin);
 	}
 
 	@Override
@@ -122,4 +133,37 @@ public class Servers extends AbstractVerticle {
 		}
 	}
 
+	public void handlePin(Message<byte[]> event) {
+		try {
+			Pin pin = Pin.parseFrom(event.body());
+			UUID id = UUID.fromString(pin.getId().getId());
+			String secret = pin.getSecret();
+			ClientServerList masterList = ClientServerList.getSingleton();
+			Advertiser advertiser = masterList.getAdvertiserById(id);
+			if (advertiser != null && advertiser.server() != null) {
+				try {
+					String password = new String(Files.readAllBytes(new File(PIN_SECRET_FILE).toPath()), "UTF-8");
+					MessageDigest digest = MessageDigest.getInstance("SHA-256");
+					byte[] secret_hash_bytes = digest.digest(secret.getBytes(StandardCharsets.UTF_8));
+					String secret_hash = DatatypeConverter.printHexBinary(secret_hash_bytes).toLowerCase();
+					if (password.equals(secret_hash)) {
+						logger.info("{}: Pinned to the top of the list", advertiser);
+						advertiser.server().setPin(true);
+						event.reply(null);
+					} else {
+						logger.warn("{}: Wrong password for pin attempt", advertiser);
+						event.fail(EventErrorReason.SECURITY_ERROR, "Wrong pin password!");
+					}
+				} catch (IOException | NoSuchAlgorithmException e) {
+					IOException detailedE = new IOException("Could not load pin secret file " + PIN_SECRET_FILE + "!", e);
+					logger.error(detailedE.getMessage(), detailedE);
+					event.fail(EventErrorReason.INTERNAL_ERROR, "Couldn't load pin secret file");
+				}
+			} else {
+				event.fail(EventErrorReason.INTERNAL_ERROR, "Advertiser is not advertising");
+			}
+		} catch (InvalidProtocolBufferException e) {
+			event.fail(EventErrorReason.INTERNAL_ERROR, "Could not parse Ping protobuf");
+		}
+	}
 }
